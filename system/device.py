@@ -26,6 +26,13 @@ class Device:
         self.name = name
 
 
+'''
+Class template for registering devices which have a binary state via the GPIO pins, that is,
+they are either ON or OFF
+
+This paradigm will allow GPIO-switched devices to have a default on/off ability, while allowing them
+to extend that functionality (i.e. with custom delays or checks) if need be in their own implementations
+'''
 class AdjustableDigitalDevice(Device):
 
     def __init__(self, name, starting_state, GPIO_pin):
@@ -34,7 +41,6 @@ class AdjustableDigitalDevice(Device):
         self.starting_state = starting_state
         self.pin = GPIO_pin
         GPIO.setup(self.pin, GPIO.OUT)
-
 
 
     def set_to(self, val):
@@ -51,7 +57,6 @@ class AdjustableDigitalDevice(Device):
               'unable to set relay {} to {}\n{}'.format(self.name, val, e),
               501
             )
-
 
     def switch(self):
         GPIO.output(self.pin, not self.state)

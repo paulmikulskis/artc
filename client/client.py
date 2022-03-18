@@ -25,16 +25,16 @@ The known commands are:
     dcc -- Let the bot invite you to a DCC CHAT connection.
 """
 
-import irc.bot
-import irc.strings
+from  irc.bot import SingleServerIRCBot
+from irc import strings
 from irc.client import ip_numstr_to_quad, ip_quad_to_numstr
 
 from messages.scribe import parseMessage
 
 
-class TestBot(irc.bot.SingleServerIRCBot):
+class TestBot(SingleServerIRCBot):
     def __init__(self, channel, nickname, server, port=6667):
-        irc.bot.SingleServerIRCBot.__init__(self, [(server, port, '1234count')], nickname, nickname)
+        SingleServerIRCBot.__init__(self, [(server, port, '1234count')], nickname, nickname)
         self.channel = channel
 
     def on_nicknameinuse(self, c, e):
@@ -48,7 +48,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
 
     def on_pubmsg(self, c, e):
         a = e.arguments[0].split(":", 1)
-        if len(a) > 1 and irc.strings.lower(a[0]) == irc.strings.lower(
+        if len(a) > 1 and strings.lower(a[0]) == strings.lower(
             self.connection.get_nickname()
         ):
             self.do_command(e, a[1].strip())
