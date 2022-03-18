@@ -17,6 +17,8 @@ for example:
 from abc import abstractmethod
 import time
 import RPi.GPIO as GPIO
+import digitalio
+import board
 from messages.types import ErrorType, PiError
 
 
@@ -35,12 +37,13 @@ to extend that functionality (i.e. with custom delays or checks) if need be in t
 '''
 class AdjustableDigitalDevice(Device):
 
-    def __init__(self, name, starting_state, GPIO_pin):
+    def __init__(self, name, starting_state, GPIO_pin: digitalio.DigitalInOut):
         super().__init__(name)
         self.name = name
         self.starting_state = starting_state
         self.pin = GPIO_pin
-        GPIO.setup(self.pin, GPIO.OUT)
+        self.pin.switch_to_output()
+        
 
 
     def set_to(self, val):
@@ -59,15 +62,15 @@ class AdjustableDigitalDevice(Device):
             )
 
     def switch(self):
-        GPIO.output(self.pin, not self.state)
+        self.pin.value = not self.pin.value
 
     def turn_on(self):
         print('turning "{}" on'.format(self.name))
-        GPIO.output(self.pin, GPIO.HIGH)
+        self.pin.value = True
 
     def turn_off(self):
         print('turning "{}" off'.format(self.name))
-        GPIO.output(self.pin, GPIO.LOW)
+        self.pin.value = False
 
 
 
