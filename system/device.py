@@ -51,9 +51,9 @@ class RelaySwitch(AdjustableDevice):
 
     def set_to(self, val):
       try:
-          if val > 0 or val == True or val == 'on' or val == 'turn on': 
+          if val == 1 or val == True or val == 'on' or val == 'turn on': 
             self.turn_on()
-          elif val <= 0 or val == False or val == 'off' or val == 'turn off':  
+          elif val == 0 or val == False or val == 'off' or val == 'turn off':  
             self.turn_off()
           return True
       except Exception as e:
