@@ -27,7 +27,7 @@ class Device:
 class AdjustableDevice(Device):
 
     def __init__(self, name, starting_state):
-        super().__init__(self, name)
+        super().__init__(name)
         self.name = name
         self.starting_state = starting_state
 
@@ -43,7 +43,7 @@ Controls a 220v relay switch connected to a GPIO pin
 class RelaySwitch(AdjustableDevice):
 
     def __init__(self, name, starting_state, GPIO_pin):
-        super().__init__(self, name)
+        super().__init__(name, starting_state)
         self.state = starting_state
         self.pin = GPIO_pin
 
