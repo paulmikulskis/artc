@@ -65,10 +65,10 @@ class RelaySwitch(AdjustableDevice):
           )
 
     def turn_on(self):
-        GPIO.output(self.pin, 1)
+        GPIO.output(self.pin, GPIO.HIGH)
 
     def turn_off(self):
-        GPIO.output(self.pin, 0)
+        GPIO.output(self.pin, GPIO.LOW)
 
     def switch(self):
         GPIO.output(self.pin, not self.state)
