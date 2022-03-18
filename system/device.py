@@ -16,7 +16,6 @@ for example:
 
 from abc import abstractmethod
 import time
-from turtle import st
 import RPi.GPIO as GPIO
 from messages.types import ErrorType, PiError
 
