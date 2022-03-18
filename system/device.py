@@ -93,7 +93,8 @@ Monitors the input with lookback history for a HallEffect sensor
 '''
 class HallEffectFlowSensor:
 
-    def __init__(self, input_pin, deltaT=10, history=100):
+    def __init__(self, name, input_pin, deltaT=10, history=100):
+        self.name = name
         self.input_pin = input_pin
         GPIO.setup(input_pin, GPIO.IN)
 

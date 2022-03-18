@@ -8,5 +8,5 @@ import board
 
 device_map = {
     'pump1': RelaySwitch('pump1', False, DigitalInOut(board.D21)),
-    'flow1': HallEffectFlowSensor('flow1')
+    'flow1': HallEffectFlowSensor('flow1', 12)
 }
