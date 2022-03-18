@@ -29,7 +29,7 @@ import irc.bot
 import irc.strings
 from irc.client import ip_numstr_to_quad, ip_quad_to_numstr
 
-from ..messages.scribe import parseMessage
+from messages.scribe import parseMessage
 
 
 class TestBot(irc.bot.SingleServerIRCBot):
