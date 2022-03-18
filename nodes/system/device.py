@@ -45,8 +45,8 @@ class AdjustableDigitalDevice(Device):
         self.starting_state = starting_state
         self.pin = GPIO_pin
         self.pin.switch_to_output()
+        self.pin.value = starting_state
         
-
 
     def set_to(self, val):
         try:
