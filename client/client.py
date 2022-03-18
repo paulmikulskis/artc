@@ -75,6 +75,7 @@ class TestBot(irc.bot.SingleServerIRCBot):
         nick = e.source.nick
         c = self.connection
         if '::' in cmd:
+            print('received Pi command: {}'.format(cmd))
             parseMessage(cmd)
 
 
