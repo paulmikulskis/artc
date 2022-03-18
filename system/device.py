@@ -55,6 +55,7 @@ class RelaySwitch(AdjustableDevice):
             self.turn_on()
           elif val == 0 or val == False or val == 'off' or val == 'turn off':  
             self.turn_off()
+          print('command executed')
           return True
       except Exception as e:
           return PiError(
