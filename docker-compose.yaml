@@ -8,6 +8,11 @@ services:
       - ./influx/config.yaml:/etc/influxdb2/config.yml
     ports:
      - 8086:8086
+    environment:
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUX_NODE_USER}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUX_NODE_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUX_ORG}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUX_BUCKET}
 
   # NGINX reverse proxy
   nginx:
@@ -27,6 +32,7 @@ services:
       - 7001:7001
     environment:
       - INSP_CONNECT_PASSWORD=${COMMUNICATIONS_MASTER_PASSWORD}
+      - INSP_NET_SUFFIX=${IRC_SERVER_SUFFIX}
 
 volumes:
   my-named-global-volume: 
