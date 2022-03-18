@@ -108,6 +108,10 @@ class TestBot(SingleServerIRCBot):
             c.notice(nick, "Not understood: " + cmd)
 
 
+def statloop():
+    print('looping...')
+
+
 def main():
     import sys
 
@@ -130,8 +134,6 @@ def main():
     #password = sys.argv[4]
 
     bot = TestBot(channel, nickname, server, port)
+    bot.reactor.scheduler.execute_every(2, statloop)
     bot.start()
 
-    while True:
-        print('looping...')
-        time.sleep(3)
