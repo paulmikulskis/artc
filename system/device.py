@@ -56,10 +56,10 @@ class RelaySwitch(AdjustableDevice):
           elif val <= 0 or val == False or val == 'off' or val == 'turn off':  
             self.turn_off()
           return True
-      except:
+      except Exception as e:
           return PiError(
             ErrorType.INTERNAL_ERROR,
-            'unable to set relay {} to {}'.format(self.name, val),
+            'unable to set relay {} to {}\n{}'.format(self.name, val, e),
             501
           )
 
