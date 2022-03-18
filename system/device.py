@@ -72,10 +72,7 @@ class RelaySwitch(AdjustableDigitalDevice):
 
     def __init__(self, name, starting_state, GPIO_pin):
         super().__init__(name, starting_state, GPIO_pin)
-        self.state = starting_state
-        self.pin = GPIO_pin
        
-
     def switch(self):
         GPIO.output(self.pin, not self.state)
 
