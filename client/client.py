@@ -33,10 +33,12 @@ from irc.client import ip_numstr_to_quad, ip_quad_to_numstr
 from messages.scribe import parseMessage
 
 
-class TestBot(SingleServerIRCBot):
-    def __init__(self, channel, nickname, server, port=6667):
-        SingleServerIRCBot.__init__(self, [(server, port, '1234count')], nickname, nickname)
+class PiBot(SingleServerIRCBot):
+    def __init__(self, channel, nickname, server, port=6667, password='1234count', stat_interval=2):
+        SingleServerIRCBot.__init__(self, [(server, port, password)], nickname, nickname)
         self.channel = channel
+        self.stat_interval = stat_interval
+        self.password = password
 
     def on_nicknameinuse(self, c, e):
         c.nick(c.get_nickname() + "_")
@@ -133,7 +135,7 @@ def main():
     nickname = sys.argv[3]
     #password = sys.argv[4]
 
-    bot = TestBot(channel, nickname, server, port)
-    bot.reactor.scheduler.execute_every(2, statloop)
+    bot = PiBot(channel, nickname, server, port)
+    bot.reactor.scheduler.execute_every(bot.stat_interval, statloop)
     bot.start()
 
