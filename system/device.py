@@ -17,9 +17,10 @@ for example:
 from abc import abstractmethod
 import RPi.GPIO as GPIO
 from messages.types import ErrorType, PiError
+GPIO.setmode(GPIO.BCM)
 
 class Device:
-    GPIO.setmode(GPIO.BCM)
+    
     def __init__(self, name):
         self.name = name
 
