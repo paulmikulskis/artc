@@ -13,8 +13,8 @@ def parseMessage(msg: string) -> bool or types.PiError :
     parts = msg.split(FIELD_SEPRATATOR)
     message_type = parts[0]
     print('message_type = "{}"'.format(message_type))
-    print('is it a command? ... :{}'.format(message_type == types.Messages.COMMAND))
-    if message_type == types.Messages.COMMAND:
+    print('is it a command? ... :{}'.format(message_type == types.Messages.COMMAND.value))
+    if message_type == types.Messages.COMMAND.value:
         if len(parts) < 2: 
           return types.PiError(
             types.ErrorType.INVALID_PARAMS,
@@ -22,7 +22,7 @@ def parseMessage(msg: string) -> bool or types.PiError :
             400
           )
         command_type = parts[1]
-        if command_type == types.Commands.CHANGE_STATE:
+        if command_type == types.Commands.CHANGE_STATE.value:
           if len(parts) < 2: 
               return types.PiError(
                 types.ErrorType.INVALID_PARAMS,
@@ -40,7 +40,7 @@ def parseMessage(msg: string) -> bool or types.PiError :
               return executeChangeCommand(*args)
 
           return False
-    if message_type == types.Messages.STATPULL:
+    if message_type == types.Messages.STATPULL.value:
         return True
 
     return False
