@@ -17,6 +17,7 @@ for example:
 from abc import abstractmethod
 import RPi.GPIO as GPIO
 from messages.types import ErrorType, PiError
+
 GPIO.setmode(GPIO.BCM)
 
 class Device:
@@ -66,9 +67,11 @@ class RelaySwitch(AdjustableDevice):
           )
 
     def turn_on(self):
+        print('turning "{}" on'.format(self.name))
         GPIO.output(self.pin, GPIO.HIGH)
 
     def turn_off(self):
+        print('turning "{}" off'.format(self.name))
         GPIO.output(self.pin, GPIO.LOW)
 
     def switch(self):
