@@ -127,7 +127,3 @@ def main():
 
     bot = TestBot(channel, nickname, server, port)
     bot.start()
-
-
-if __name__ == "__main__":
-    main()
