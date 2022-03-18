@@ -16,6 +16,7 @@ for example:
 
 from abc import abstractmethod
 import time
+from turtle import st
 import RPi.GPIO as GPIO
 from messages.types import ErrorType, PiError
 
@@ -72,6 +73,9 @@ class RelaySwitch(AdjustableDigitalDevice):
 
     def __init__(self, name, starting_state, GPIO_pin):
         super().__init__(name, starting_state, GPIO_pin)
+        self.name = name
+        self.starting_state = starting_state
+        self.pin = GPIO_pin
        
     def switch(self):
         GPIO.output(self.pin, not self.state)
