@@ -76,7 +76,9 @@ class TestBot(irc.bot.SingleServerIRCBot):
         c = self.connection
         if '::' in cmd:
             print('received Pi command: {}'.format(cmd))
-            parseMessage(cmd)
+            result = parseMessage(cmd)
+            if result is not True:
+                print(result)
 
 
         if cmd == "disconnect":
