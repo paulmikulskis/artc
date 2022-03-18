@@ -1,0 +1,32 @@
+services:
+
+  # InfluxDB timeseries database
+  influxdb:
+    image: influxdb:2.0.9
+    volumes: 
+      - ./influx:/var/lib/influxdb2
+      - ./influx/config.yaml:/etc/influxdb2/config.yml
+    ports:
+     - 8086:8086
+
+  # NGINX reverse proxy
+  nginx:
+    image: nginx:alpine
+    ports:
+     - 80:80
+     - 443:443
+    volumes:
+      - my-named-global-volume:/another-path/the-same-named-global-volume
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+  # IRC server for supporting communications
+  ircd:
+    image: inspircd/inspircd-docker:latest
+    ports:
+      - 6667:6667
+      - 7001:7001
+    environment:
+      - INSP_CONNECT_PASSWORD=${COMMUNICATIONS_MASTER_PASSWORD}
+
+volumes:
+  my-named-global-volume: 
