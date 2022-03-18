@@ -1,5 +1,5 @@
-from ..messages.types import ErrorType, PiError
-from ..system.system import device_map
+from messages.types import ErrorType, PiError
+from system.system import device_map
 
 def executeChangeCommand(device_name, newValue, speed=None):
     device = device_map.get(device_name)
