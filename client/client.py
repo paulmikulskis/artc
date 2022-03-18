@@ -25,6 +25,7 @@ The known commands are:
     dcc -- Let the bot invite you to a DCC CHAT connection.
 """
 
+import time
 from  irc.bot import SingleServerIRCBot
 from irc import strings
 from irc.client import ip_numstr_to_quad, ip_quad_to_numstr
@@ -130,3 +131,7 @@ def main():
 
     bot = TestBot(channel, nickname, server, port)
     bot.start()
+
+    while True:
+        print('looping...')
+        time.sleep(3)
