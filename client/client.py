@@ -109,7 +109,7 @@ class TestBot(SingleServerIRCBot):
 
 
 def statloop():
-    print('looping...')
+    print('sending stats...')
 
 
 def main():
