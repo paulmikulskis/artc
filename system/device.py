@@ -16,7 +16,7 @@ for example:
 
 from abc import abstractmethod
 import RPi.GPIO as GPIO
-from messages.types import ErrorType, PiError
+from ..messages.types import ErrorType, PiError
 
 class Device:
 

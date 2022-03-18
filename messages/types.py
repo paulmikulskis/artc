@@ -1,4 +1,3 @@
-from email import message
 from enum import Enum
 import string
 
