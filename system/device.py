@@ -76,15 +76,3 @@ class RelaySwitch(AdjustableDigitalDevice):
         self.name = name
         self.starting_state = starting_state
         self.pin = GPIO_pin
-       
-    def switch(self):
-        GPIO.output(self.pin, not self.state)
-
-    def turn_on(self):
-        print('turning "{}" on'.format(self.name))
-        time.sleep(2)
-        GPIO.output(self.pin, GPIO.HIGH)
-
-    def turn_off(self):
-        print('turning "{}" off'.format(self.name))
-        GPIO.output(self.pin, GPIO.LOW)
