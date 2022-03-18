@@ -15,56 +15,45 @@ for example:
 '''
 
 from abc import abstractmethod
+import time
 import RPi.GPIO as GPIO
 from messages.types import ErrorType, PiError
 
 
 
 class Device:
-    
     def __init__(self, name):
         self.name = name
 
 
-class AdjustableDevice(Device):
-
-    def __init__(self, name, starting_state):
-        super().__init__(name)
-        self.name = name
-        self.starting_state = starting_state
-
-
-    @abstractmethod
-    def set_to(self, val):
-        pass
-
-
-'''
-Controls a 220v relay switch connected to a GPIO pin
-'''
-class RelaySwitch(AdjustableDevice):
+class AdjustableDigitalDevice(Device):
 
     def __init__(self, name, starting_state, GPIO_pin):
-        super().__init__(name, starting_state)
-        self.state = starting_state
+        super().__init__(name)
+        GPIO.setup(self.pin, GPIO.OUT)
+        self.name = name
+        self.starting_state = starting_state
         self.pin = GPIO_pin
 
-        GPIO.setup(self.pin, GPIO.OUT)
 
     def set_to(self, val):
-      try:
-          if val == 1 or val == True or val == 'on' or val == 'turn on': 
-            self.turn_on()
-          elif val == 0 or val == False or val == 'off' or val == 'turn off':  
-            self.turn_off()
-          print('command executed, pin {} value set to {}'.format(self.pin, val))
-          return True
-      except Exception as e:
-          return PiError(
-            ErrorType.INTERNAL_ERROR,
-            'unable to set relay {} to {}\n{}'.format(self.name, val, e),
-            501
-          )
+        try:
+            if val == 1 or val == True or val == 'on' or val == 'turn on': 
+              self.turn_on()
+            elif val == 0 or val == False or val == 'off' or val == 'turn off':  
+              self.turn_off()
+            print('command executed, pin {} value set to {}'.format(self.pin, val))
+            return True
+        except Exception as e:
+            return PiError(
+              ErrorType.INTERNAL_ERROR,
+              'unable to set relay {} to {}\n{}'.format(self.name, val, e),
+              501
+            )
+
+
+    def switch(self):
+        GPIO.output(self.pin, not self.state)
 
     def turn_on(self):
         print('turning "{}" on'.format(self.name))
@@ -74,6 +63,26 @@ class RelaySwitch(AdjustableDevice):
         print('turning "{}" off'.format(self.name))
         GPIO.output(self.pin, GPIO.LOW)
 
+
+
+'''
+Controls a 220v relay switch connected to a GPIO pin
+'''
+class RelaySwitch(AdjustableDigitalDevice):
+
+    def __init__(self, name, starting_state, GPIO_pin):
+        super().__init__(name, starting_state, GPIO_pin)
+        self.state = starting_state
+       
+
     def switch(self):
         GPIO.output(self.pin, not self.state)
 
+    def turn_on(self):
+        print('turning "{}" on'.format(self.name))
+        time.sleep(2)
+        GPIO.output(self.pin, GPIO.HIGH)
+
+    def turn_off(self):
+        print('turning "{}" off'.format(self.name))
+        GPIO.output(self.pin, GPIO.LOW)
