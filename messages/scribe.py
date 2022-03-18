@@ -31,7 +31,7 @@ def parseMessage(msg: string) -> bool or types.PiError :
               )
           else:
               args = parts[2].split(',')
-              if len(args < 2):
+              if len(args) < 2:
                   return types.PiError(
                     types.ErrorType.INVALID_PARAMS,
                     'cmd CHANGE_STATE received but only {} arguments specified'.format(len(args)),
