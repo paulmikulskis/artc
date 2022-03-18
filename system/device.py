@@ -19,7 +19,7 @@ import RPi.GPIO as GPIO
 from messages.types import ErrorType, PiError
 
 class Device:
-
+    GPIO.setmode(GPIO.BCM)
     def __init__(self, name):
         self.name = name
 
