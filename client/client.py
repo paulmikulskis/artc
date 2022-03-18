@@ -29,8 +29,8 @@ import time
 from  irc.bot import SingleServerIRCBot
 from irc import strings
 from irc.client import ip_numstr_to_quad, ip_quad_to_numstr
-
 from messages.scribe import parseMessage
+from system.system import device_map
 
 
 class PiBot(SingleServerIRCBot):
@@ -112,6 +112,7 @@ class PiBot(SingleServerIRCBot):
 
 def statloop():
     print('sending stats...')
+    print('flow sensor reading = {}'.format(device_map['flow1'].get_rate()))
 
 
 def main():
@@ -134,6 +135,8 @@ def main():
     channel = sys.argv[2]
     nickname = sys.argv[3]
     #password = sys.argv[4]
+
+    device_map['flow1'].listen()
 
     bot = PiBot(channel, nickname, server, port)
     bot.reactor.scheduler.execute_every(bot.stat_interval, statloop)

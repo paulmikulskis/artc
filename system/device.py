@@ -16,6 +16,8 @@ for example:
 
 from abc import abstractmethod
 import time
+from datetime import datetime, timedelta
+import sys                      # Import sys module
 import RPi.GPIO as GPIO
 import digitalio
 import board
@@ -37,7 +39,7 @@ to extend that functionality (i.e. with custom delays or checks) if need be in t
 '''
 class AdjustableDigitalDevice(Device):
 
-    def __init__(self, name, starting_state, GPIO_pin: digitalio.DigitalInOut):
+    def __init__(self, name, starting_state, GPIO_pin):
         super().__init__(name)
         self.name = name
         self.starting_state = starting_state
@@ -84,3 +86,59 @@ class RelaySwitch(AdjustableDigitalDevice):
         self.name = name
         self.starting_state = starting_state
         self.pin = GPIO_pin
+
+
+'''
+Monitors the input with lookback history for a HallEffect sensor
+'''
+class HallEffectFlowSensor:
+
+    def __init__(self, input_pin, deltaT=10, history=100):
+        self.input_pin = input_pin
+        GPIO.setup(input_pin, GPIO.IN)
+
+        self.delta_revs = [-1 for i in range(history)]
+        self.current_delta_revs = 0
+        self.last_time = datetime.now()
+        self.constant = 0.1
+        self.rate = 0
+        self.deltaT = deltaT
+
+    # channel is required by the RPi.GPIO library, but we make it optional
+    # to allow for intentional calls to detect() for RealTime measurements
+    def detect(self, channel=None):
+        tim = datetime.now()
+        fast_read = (channel is None) and ((tim - self.last_time).seconds > (self.deltaT / 2))
+        if (tim - self.last_time > timedelta(seconds=self.deltaT)) or fast_read:
+            self.delta_revs.append(self.current_delta_revs)
+            self.delta_revs.pop(0)
+            self.current_delta_revs = 0
+            self.last_time = tim
+
+        if channel is not None:
+          self.current_delta_revs += 1
+
+    
+    def listen(self):
+        GPIO.add_event_detect(self.input_pin, GPIO.BOTH, callback=self.detect, bouncetime=20)
+
+
+    def stop(self):
+        GPIO.remove_event_detect(self.input_pin)
+
+    
+    def get_rate(self, lookback=timedelta(seconds=10)):
+        now = datetime.now()
+        lookback_indices = int(lookback.seconds / self.deltaT) or 1
+        if lookback_indices > len(self.delta_revs):
+            lookback_indices = len(self.delta_revs)
+
+        selected = self.delta_revs[-1]
+        for i in range(int((now - self.last_time).seconds / self.deltaT)):
+            self.delta_revs.append(selected)
+            self.delta_revs.pop(0)
+
+        self.detect()
+        selected = self.delta_revs[len(self.delta_revs) - lookback_indices:]
+
+        return round((sum(selected) / len(selected)) * self.constant, 4)
