@@ -62,7 +62,7 @@ class PiError:
     def __str__(self):
         return '{}: {} HTTP {}\n{}'.format(
             self.type, 
-            ErrorDict(self.type), 
+            ErrorDict.get(self.type.value), 
             self.httpCode, 
             self.message
             )
@@ -70,7 +70,7 @@ class PiError:
     def print(self):
         return '{}::{}::{}::{}'.format(
             self.type, 
-            ErrorDict(self.type), 
+            ErrorDict.get(self.type.value), 
             self.httpCode, 
             self.message
             )
