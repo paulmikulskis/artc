@@ -52,7 +52,7 @@ class AdjustableDigitalDevice(Device):
               self.turn_on()
             elif val == 0 or val == False or val == 'off' or val == 'turn off':  
               self.turn_off()
-            print('command executed, pin {} value set to {}'.format(self.pin, val))
+            print('command executed, pin {} value set to {}'.format(self.pin._pin, val))
             return True
         except Exception as e:
             return PiError(
