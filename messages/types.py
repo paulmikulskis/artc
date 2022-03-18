@@ -49,6 +49,7 @@ ErrorDict = {
     32603: 'INTERNAL_ERROR',
     32604: 'PROCEDURE_IS_METHOD',
     32700: 'PARSE_ERROR',
+    42069: 'NO DEVICE'
 }
 
 
@@ -61,7 +62,7 @@ class PiError:
 
     def __str__(self):
         return '{}: {} HTTP {}\n{}'.format(
-            self.type, 
+            self.type.value, 
             ErrorDict.get(self.type.value), 
             self.httpCode, 
             self.message
@@ -69,7 +70,7 @@ class PiError:
 
     def print(self):
         return '{}::{}::{}::{}'.format(
-            self.type, 
+            self.type.value, 
             ErrorDict.get(self.type.value), 
             self.httpCode, 
             self.message
