@@ -30,10 +30,11 @@ class AdjustableDigitalDevice(Device):
 
     def __init__(self, name, starting_state, GPIO_pin):
         super().__init__(name)
-        GPIO.setup(self.pin, GPIO.OUT)
         self.name = name
         self.starting_state = starting_state
         self.pin = GPIO_pin
+        GPIO.setup(self.pin, GPIO.OUT)
+
 
 
     def set_to(self, val):
