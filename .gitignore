@@ -1,2 +1,3 @@
 .env
 influx/*/*
+influxd.bolt
