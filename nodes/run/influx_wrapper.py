@@ -17,10 +17,11 @@ class StatWriter:
     def __init__(self, host):
         print('host=', host)
         self.host = host
+        self.org = os.environ.get("INFLUX_ORG")
         self.client = InfluxDBClient(
             url=self.host, 
             token=os.environ.get("INFLUX_NODE_KEY"),
-            org=os.environ.get("INFLUX_ORG")
+            org=self.org
           )
         self.deployment_id = os.environ.get("NODE_DEPLOYMENT_ID")
         self.write_api = self.client.write_api(write_options=SYNCHRONOUS)
@@ -35,6 +36,12 @@ class StatWriter:
                 "deployment", self.deployment_id
                 ).field(key, value)
             buffer.append(point)
-        self.write_api.write(bucket="my-bucket", record=buffer[0])
+        
+        data_dict = {
+            "measurement": "chat_stats",
+            "tags": {"deployment": self.deployment_id},
+            "fields": datapoints
+        }
+        self.write_api.write("my-bucket", self.org, data_dict)
 
 
