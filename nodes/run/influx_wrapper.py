@@ -15,6 +15,7 @@ class StatWriter:
     print('ord=',os.environ.get("INFLUX_ORG"))
 
     def __init__(self, host):
+        print('host=', host)
         self.host = host
         self.client = InfluxDBClient(
             url=self.host, 
