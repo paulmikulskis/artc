@@ -39,7 +39,7 @@ from dotenv import load_dotenv
 
 # Get the path to the directory this file is in
 BASEDIR = abspath(dirname(__file__))
-load_dotenv(join(BASEDIR, '../.env'))
+load_dotenv(join(BASEDIR, '../.base.env'))
 
 
 class PiBot(SingleServerIRCBot):
