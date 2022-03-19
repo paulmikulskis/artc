@@ -35,6 +35,6 @@ class StatWriter:
                 "deployment", self.deployment_id
                 ).field(key, value)
             buffer.append(point)
-        self.write_api.write(bucket="my-bucket", record=buffer)
+        self.write_api.write(bucket="my-bucket", record=buffer[0])
 
 
