@@ -14,12 +14,13 @@ class StatWriter:
     print('token=', os.environ.get("INFLUX_NODE_KEY"))
     print('ord=',os.environ.get("INFLUX_ORG"))
 
-    def __init__(self, host):
+    def __init__(self, host, port=8086):
         print('host=', host)
         self.host = host
+        self.port = port
         self.org = os.environ.get("INFLUX_ORG")
         self.client = InfluxDBClient(
-            url=self.host, 
+            url='http://{}:{}'.format(self.host, self.port), 
             token=os.environ.get("INFLUX_NODE_KEY"),
             org=self.org
           )
