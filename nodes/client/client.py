@@ -25,12 +25,21 @@ The known commands are:
     dcc -- Let the bot invite you to a DCC CHAT connection.
 """
 
+import functools
+import os
 import time
 from  irc.bot import SingleServerIRCBot
 from irc import strings
 from irc.client import ip_numstr_to_quad, ip_quad_to_numstr
 from messages.scribe import parseMessage
 from system.system import device_map
+from run.influx_wrapper import StatWriter
+from os.path import join, dirname, abspath
+from dotenv import load_dotenv
+
+# Get the path to the directory this file is in
+BASEDIR = abspath(dirname(__file__))
+load_dotenv(join(BASEDIR, '../.env'))
 
 
 class PiBot(SingleServerIRCBot):
@@ -110,9 +119,15 @@ class PiBot(SingleServerIRCBot):
             c.notice(nick, "Not understood: " + cmd)
 
 
-def statloop():
-    print('sending stats...')
-    print('flow sensor reading = {}'.format(device_map['flow1'].get_rate()))
+
+def statloop(stat_writer):
+    print('\nsending stats...')
+    stats = {
+        'hall1': device_map['flow1'].get_rate(),
+        'pump1': device_map['pump1'].get_state()
+    }
+    print(stats)
+    stat_writer.write_dict('test', stats)
 
 
 def main():
@@ -134,11 +149,10 @@ def main():
         port = 6667
     channel = sys.argv[2]
     nickname = sys.argv[3]
-    #password = sys.argv[4]
-
+    stat_writer = StatWriter(os.environ.get("INFLUX_HOST"))
     device_map['flow1'].listen()
 
     bot = PiBot(channel, nickname, server, port)
-    bot.reactor.scheduler.execute_every(bot.stat_interval, statloop)
+    bot.reactor.scheduler.execute_every(bot.stat_interval, functools.partial(statloop, stat_writer))
     bot.start()
 

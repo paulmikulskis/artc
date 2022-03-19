@@ -3,7 +3,7 @@ services:
   # InfluxDB timeseries database
   influxdb:
     container_name: influxdb
-    image: influxdb:2.0.9
+    image: influxdb:latest
     volumes: 
       - ./influx:/var/lib/influxdb2
       - ./influx/config.yaml:/etc/influxdb2/config.yml
@@ -16,8 +16,8 @@ services:
       - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUX_NODE_PASSWORD}
       - DOCKER_INFLUXDB_INIT_ORG=${INFLUX_ORG}
       - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUX_BUCKET}
-      - INFLUX_NODE_USER=${INFLUX_NODE_USER}
-      - INFLUX_NODE_PASSWORD=${INFLUX_NODE_PASSWORD}
+      - INFLUX_ADMIN_USER=${INFLUX_NODE_USER}
+      - INFLUX_ADMIN_PASSWORD=${INFLUX_NODE_PASSWORD}
 
   # NGINX reverse proxy
   nginx:
@@ -26,7 +26,6 @@ services:
      - 80:80
      - 443:443
     volumes:
-      - my-named-global-volume:/another-path/the-same-named-global-volume
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
 
   # IRC server for supporting communications
@@ -38,6 +37,3 @@ services:
     environment:
       - INSP_CONNECT_PASSWORD=${COMMUNICATIONS_MASTER_PASSWORD}
       - INSP_NET_SUFFIX=${IRC_SERVER_SUFFIX}
-
-volumes:
-  my-named-global-volume: 

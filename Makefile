@@ -4,4 +4,4 @@ dev:
 	docker-compose down && ./start.sh
 	
 setup:
-	rm influx/influxd.bolt && docker-compose down && ./start.sh
+	rm  -fr influx/influxd.bolt 2> /dev/null && docker-compose down && ./start.sh

@@ -74,6 +74,9 @@ class AdjustableDigitalDevice(Device):
         print('turning "{}" off'.format(self.name))
         self.pin.value = False
 
+    def get_state(self):
+        return self.pin.value
+
 
 
 '''
