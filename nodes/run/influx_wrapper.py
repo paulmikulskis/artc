@@ -16,7 +16,9 @@ class StatWriter:
         self.host = host
         self.client = InfluxDBClient(
             url=self.host, 
-            token=os.environ.get("INFLUX_NODE_KEY"))
+            token=os.environ.get("INFLUX_NODE_KEY"),
+            org='sungbean'
+          )
         self.deployment_id = os.environ.get("NODE_DEPLOYMENT_ID")
         self.write_api = self.client.write_api(write_options=SYNCHRONOUS)
     
