@@ -22,6 +22,7 @@ import RPi.GPIO as GPIO
 import digitalio
 import board
 from messages.types import ErrorType, PiError
+from w1thermsensor import W1ThermSensor, Sensor, Unit
 
 
 
@@ -77,6 +78,26 @@ class AdjustableDigitalDevice(Device):
     def get_state(self):
         return self.pin.value
 
+
+
+'''
+Monitors the temperature readings of a OneWire-based thermister
+'''
+class OneWireThermister(Device):
+
+    def __init__(self, name, id, ONE_WIRE_ADDRESSES, factory_id=None, sensor_type=Sensor.DS18B20):
+        super().__init__(name)
+        self.sensor_type = sensor_type
+        self.id = id
+        self.factory_id=factory_id
+        self.address_map = ONE_WIRE_ADDRESSES
+        self.sensor = W1ThermSensor(sensor_type=self.sensor_type, sensor_id=self.address_map[self.id])
+
+    def read_farenheight(self):
+        return self.sensor.get_temperature(Unit.DEGREES_F)
+
+    def read_celsius(self):
+        return self.sensor.get_temperature()
 
 
 '''

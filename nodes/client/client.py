@@ -125,7 +125,8 @@ def statloop(stat_writer):
     print('\nsending stats...')
     stats = {
         'hall1': device_map['flow1'].get_rate(),
-        'pump1': device_map['pump1'].get_state()
+        'pump1': device_map['pump1'].get_state(),
+        'therm1': device_map['therm1'].read_farenheight()
     }
     
     print(stats)
