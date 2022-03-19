@@ -11,6 +11,8 @@ load_dotenv(os.path.join(BASEDIR, '../../.base.env'))
 
 class StatWriter:
 
+    print('token=', os.environ.get("INFLUX_NODE_KEY"))
+    print('ord=',os.environ.get("INFLUX_ORG"))
 
     def __init__(self, host):
         self.host = host
