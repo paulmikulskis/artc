@@ -32,11 +32,10 @@ from  irc.bot import SingleServerIRCBot
 from irc import strings
 from irc.client import ip_numstr_to_quad, ip_quad_to_numstr
 from messages.scribe import parseMessage
-from system.system import device_map, stats_map
+from system.system import device_map
 from run.influx_wrapper import StatWriter
 from os.path import join, dirname, abspath
 from dotenv import load_dotenv
-
 
 # Get the path to the directory this file is in
 BASEDIR = abspath(dirname(__file__))
@@ -123,7 +122,11 @@ class PiBot(SingleServerIRCBot):
 
 def statloop(stat_writer):
     print('\nsending stats...')
-    stats = {k: v() for k, v in stats_map.items()}
+    stats = {
+        'hall1': device_map['flow1'].get_rate(),
+        'pump1': device_map['pump1'].get_state()
+    }
+    
     print(stats)
     stat_writer.write_dict('test', stats)
 
