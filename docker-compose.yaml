@@ -32,7 +32,7 @@ services:
   ircd:
     image: inspircd/inspircd-docker:latest
     volumes:
-      - ./inspircd.conf:/inspircd/conf/
+      - ./inspircd.conf:/inspircd/conf.d/inspircd.conf
     ports:
       - 6667:6667
       - 7001:7001
