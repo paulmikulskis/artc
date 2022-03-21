@@ -37,6 +37,8 @@ from run.influx_wrapper import StatWriter
 from os.path import join, dirname, abspath
 from dotenv import load_dotenv
 
+from system.system import stat_map
+
 # Get the path to the directory this file is in
 BASEDIR = abspath(dirname(__file__))
 load_dotenv(join(BASEDIR, '../.base.env'))
@@ -123,11 +125,7 @@ class PiBot(SingleServerIRCBot):
 
 def statloop(stat_writer):
     print('\nsending stats...')
-    stats = {
-        'hall1': device_map['flow1'].get_rate(),
-        'pump1': device_map['pump1'].get_state(),
-        'therm1': device_map['therm1'].read_farenheight()
-    }
+    stats = {k: v() for k, v in stat_map.items()}
     
     print(stats)
     stat_writer.write_dict('test', stats)
