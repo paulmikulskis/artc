@@ -31,9 +31,11 @@ services:
   # IRC server for supporting communications
   ircd:
     image: inspircd/inspircd-docker:latest
+    volumes:
+      - ./inspircd.conf:/inspircd/conf/
     ports:
       - 6667:6667
       - 7001:7001
     environment:
-      - INSP_CONNECT_PASSWORD=${COMMUNICATIONS_MASTER_PASSWORD}
+    # - INSP_CONNECT_PASSWORD=${COMMUNICATIONS_MASTER_PASSWORD}
       - INSP_NET_SUFFIX=${IRC_SERVER_SUFFIX}
