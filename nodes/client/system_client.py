@@ -154,6 +154,6 @@ def main():
     device_map['flow1'].listen()
 
     bot = PiBot(channel, nickname, server, port)
-    bot.reactor.scheduler.execute_every(bot.stat_interval, functools.partial(statloop, influx_stat_writer, bot))
+    bot.reactor.scheduler.execute_every(bot.stat_interval, functools.partial(statloop, influx_stat_writer, bot.connection))
     bot.start()
 
