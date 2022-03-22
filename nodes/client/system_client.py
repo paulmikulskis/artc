@@ -57,6 +57,7 @@ class PiBot(SingleServerIRCBot):
 
     def on_welcome(self, c, e):
         c.join(self.channel)
+        c.join(self._nickname)
 
     def on_privmsg(self, c, e):
         self.do_command(e, e.arguments[0])
