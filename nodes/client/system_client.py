@@ -129,6 +129,7 @@ def statloop(influx_stat_writer: InfluxStatWriter, irc_connection: ServerConnect
     
     print(stats)
     influx_stat_writer.write_dict('test', stats)
+    print('chatting messages to: ', '#'+irc_connection.nickname)
     irc_connection.privmsg('#'+irc_connection.nickname, ''+str(stats))
 
 def main():
