@@ -30,10 +30,10 @@ import os
 import time
 from  irc.bot import SingleServerIRCBot
 from irc import strings
-from irc.client import ip_numstr_to_quad, ip_quad_to_numstr
+from irc.client import ip_numstr_to_quad, ip_quad_to_numstr, ServerConnection
 from messages.scribe import parseMessage
 from system.system import device_map
-from run.influx_wrapper import StatWriter
+from run.influx_wrapper import InfluxStatWriter
 from os.path import join, dirname, abspath
 from dotenv import load_dotenv
 
@@ -123,13 +123,13 @@ class PiBot(SingleServerIRCBot):
 
 
 
-def statloop(stat_writer):
+def statloop(influx_stat_writer: InfluxStatWriter, irc_connection: ServerConnection):
     print('\nsending stats...')
     stats = {k: v() for k, v in stat_map.items()}
     
     print(stats)
-    stat_writer.write_dict('test', stats)
-
+    influx_stat_writer.write_dict('test', stats)
+    irc_connection.privmsg('#main', ''+stats)
 
 def main():
     import sys
@@ -150,10 +150,10 @@ def main():
         port = 6667
     channel = sys.argv[2]
     nickname = sys.argv[3]
-    stat_writer = StatWriter(os.environ.get("INFLUX_HOST"))
+    influx_stat_writer = InfluxStatWriter(os.environ.get("INFLUX_HOST"))
     device_map['flow1'].listen()
 
     bot = PiBot(channel, nickname, server, port)
-    bot.reactor.scheduler.execute_every(bot.stat_interval, functools.partial(statloop, stat_writer))
+    bot.reactor.scheduler.execute_every(bot.stat_interval, functools.partial(statloop, influx_stat_writer, bot))
     bot.start()
 

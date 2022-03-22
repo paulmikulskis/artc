@@ -9,7 +9,7 @@ BASEDIR = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(BASEDIR, '../../.base.env'))
 
 
-class StatWriter:
+class InfluxStatWriter:
 
     print('token=', os.environ.get("INFLUX_NODE_KEY"))
     print('ord=',os.environ.get("INFLUX_ORG"))
