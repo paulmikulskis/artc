@@ -31,43 +31,45 @@ import time
 from  irc.bot import SingleServerIRCBot
 from irc import strings
 from irc.client import ip_numstr_to_quad, ip_quad_to_numstr
-from messages.scribe import parseMessage
-from system.system import device_map
-from run.influx_wrapper import InfluxStatWriter
 from os.path import join, dirname, abspath
 from dotenv import load_dotenv
-
-from system.system import stat_map
 
 # Get the path to the directory this file is in
 BASEDIR = abspath(dirname(__file__))
 load_dotenv(join(BASEDIR, '../.base.env'))
 
 
-class PiBot(SingleServerIRCBot):
-    def __init__(self, channel, nickname, server, port=6667, password='1234count', stat_interval=2):
+class ControlBot(SingleServerIRCBot):
+    def __init__(self, channel, nickname, server, nodenicks, port=6667, password='1234count', stat_interval=2):
         if isinstance(os.environ.get("STAT_WRITER_INTERVAL_SEC"), int): stat_interval = os.environ.get("STAT_WRITER_INTERVAL_SEC")
         SingleServerIRCBot.__init__(self, [(server, port, password)], nickname, nickname)
         self.channel = channel
         self.stat_interval = stat_interval
         self.password = password
+        self.nickname = nickname
+        self.nodenicks = nodenicks
+
 
     def on_nicknameinuse(self, c, e):
         c.nick(c.get_nickname() + "_")
 
     def on_welcome(self, c, e):
         c.join(self.channel)
+        for nick in self.nodenicks:
+            c.join('#'+nick)
 
     def on_privmsg(self, c, e):
         self.do_command(e, e.arguments[0])
 
     def on_pubmsg(self, c, e):
-        a = e.arguments[0].split(":", 1)
-        if len(a) > 1 and strings.lower(a[0]) == strings.lower(
-            self.connection.get_nickname()
-        ):
-            self.do_command(e, a[1].strip())
+        if (e.target[1:] == self.nickname) or (e.target[1:] in self.nodenicks):
+            self.process_stats(e, e.arguments)
+
         return
+
+    def process_stats(self, stats):
+        print('\nheard stats from IRC server:')
+        print(stats)
 
     def on_dccmsg(self, c, e):
         # non-chat DCC messages are raw bytes; decode as text
@@ -91,10 +93,6 @@ class PiBot(SingleServerIRCBot):
         c = self.connection
         if '::' in cmd:
             print('received Pi command: {}'.format(cmd))
-            result = parseMessage(cmd)
-            if result is not True:
-                print(result)
-
 
         if cmd == "disconnect":
             self.disconnect()
@@ -123,12 +121,8 @@ class PiBot(SingleServerIRCBot):
 
 
 
-def statloop(influx_stat_writer):
-    print('\nsending stats...')
-    stats = {k: v() for k, v in stat_map.items()}
-    
-    print(stats)
-    influx_stat_writer.write_dict('test', stats)
+def statloop():
+    pass
 
 
 def main():
@@ -150,10 +144,11 @@ def main():
         port = 6667
     channel = sys.argv[2]
     nickname = sys.argv[3]
-    influx_stat_writer = InfluxStatWriter(os.environ.get("INFLUX_HOST"))
-    device_map['flow1'].listen()
 
-    bot = PiBot(channel, nickname, server, port)
-    bot.reactor.scheduler.execute_every(bot.stat_interval, functools.partial(statloop, influx_stat_writer))
+    nodenicks = ['pibot', 'jumba_bot']
+    bot = ControlBot(channel, nickname, server, nodenicks, port)
+    bot.reactor.scheduler.execute_every(bot.stat_interval, functools.partial(statloop))
     bot.start()
 
+if __name__ == '__main__':
+    main()
