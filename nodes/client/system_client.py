@@ -65,6 +65,7 @@ class PiBot(SingleServerIRCBot):
 
     def on_pubmsg(self, c, e):
         a = e.arguments[0].split(":", 1)
+        print('a args:', a)
         if len(a) > 1 and strings.lower(a[0]) == strings.lower(
             self.connection.get_nickname()
         ):
@@ -124,15 +125,16 @@ class PiBot(SingleServerIRCBot):
             c.notice(nick, "Not understood: " + cmd)
 
 
-
+'''
+Main loop that defines the frequency of global stat updates
+to the server and InfluxDB
+'''
 def statloop(influx_stat_writer: InfluxStatWriter, irc_connection: ServerConnection):
     print('\nsending stats...')
     stats = {k: v() for k, v in stat_map.items()}
-    
-    print(stats)
     influx_stat_writer.write_dict('test', stats)
-    print('chatting messages to: ', '#'+irc_connection.nickname)
     irc_connection.privmsg('#'+irc_connection.nickname, ''+str(stats))
+
 
 def main():
     import sys
