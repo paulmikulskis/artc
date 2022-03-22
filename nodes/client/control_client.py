@@ -63,7 +63,8 @@ class ControlBot(SingleServerIRCBot):
 
     def on_pubmsg(self, c, e):
         if (e.target[1:] == self.nickname) or (e.target[1:] in self.nodenicks):
-            self.process_stats(e, e.arguments)
+            if(e.arguments[0].split('::')[0] == 'stats'):
+                self.process_stats(e.arguments)
 
         return
 

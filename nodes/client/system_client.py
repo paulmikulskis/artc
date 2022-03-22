@@ -134,7 +134,7 @@ def statloop(influx_stat_writer: InfluxStatWriter, irc_connection: ServerConnect
     print('\nsending stats...')
     stats = {k: v() for k, v in stat_map.items()}
     influx_stat_writer.write_dict('test', stats)
-    irc_connection.privmsg('#'+irc_connection.nickname, ''+str(stats))
+    irc_connection.privmsg('#'+irc_connection.nickname, 'stats::'+str(stats))
 
 
 def main():
