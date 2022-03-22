@@ -51,13 +51,14 @@ class PiBot(SingleServerIRCBot):
         self.channel = channel
         self.stat_interval = stat_interval
         self.password = password
+        self.nickname = nickname
 
     def on_nicknameinuse(self, c, e):
         c.nick(c.get_nickname() + "_")
 
     def on_welcome(self, c, e):
         c.join(self.channel)
-        c.join(self._nickname)
+        c.join('#'+self.nickname)
 
     def on_privmsg(self, c, e):
         self.do_command(e, e.arguments[0])
