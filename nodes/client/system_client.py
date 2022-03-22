@@ -66,7 +66,7 @@ class PiBot(SingleServerIRCBot):
     def on_pubmsg(self, c, e):
         a = e.arguments[0].split(":", 1)
         print('a args:', a)
-        print('e args', e.arguments)
+        print('e args', e)
         if len(a) > 1 and strings.lower(a[0]) == strings.lower(
             self.connection.get_nickname()
         ):
