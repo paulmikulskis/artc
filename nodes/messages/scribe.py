@@ -12,8 +12,8 @@ FIELD_SEPRATATOR = '::'
 def parseMessage(msg: string) -> bool or types.PiError :
     parts = msg.split(FIELD_SEPRATATOR)
     message_type = parts[0]
-    print('message_type = "{}"'.format(message_type))
-    print('is it a command? ... :{}'.format(message_type == types.Messages.COMMAND.value))
+    print('    message_type = "{}"'.format(message_type))
+    #print('is it a command? ... :{}'.format(message_type == types.Messages.COMMAND.value))
     if message_type == types.Messages.COMMAND.value:
         if len(parts) < 2: 
           return types.PiError(
@@ -39,7 +39,6 @@ def parseMessage(msg: string) -> bool or types.PiError :
                   )
               return executeChangeCommand(*args)
 
-          return False
     if message_type == types.Messages.STATPULL.value:
         return True
 
