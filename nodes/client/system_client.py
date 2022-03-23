@@ -47,7 +47,7 @@ load_dotenv(join(BASEDIR, '../.base.env'))
 class PiBot(SingleServerIRCBot):
     def __init__(self, channel, deployment_id, server, port=6667, password='1234count', stat_interval=2):
         if isinstance(os.environ.get("STAT_WRITER_INTERVAL_SEC"), int): stat_interval = os.environ.get("STAT_WRITER_INTERVAL_SEC")
-        SingleServerIRCBot.__init__(self, [(server, port, password)], nickname, nickname)
+        SingleServerIRCBot.__init__(self, [(server, port, password)], deployment_id, deployment_id)
         self.channel = channel
         self.stat_interval = stat_interval
         self.password = password
