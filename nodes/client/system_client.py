@@ -79,6 +79,8 @@ class PiBot(SingleServerIRCBot):
         
         if e.target == '#'+self.nickname:
             # if the message is intended for this PiBot, then parse:
+            message_txt = the_message.split(':', 1)[1]
+            print('message_txt:', message_txt)
             result = parseMessage(the_message)
             if result is not True:
                 print(result)
