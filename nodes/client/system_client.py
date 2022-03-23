@@ -65,12 +65,19 @@ class PiBot(SingleServerIRCBot):
 
     def on_pubmsg(self, c, e):
         a = e.arguments[0].split(":", 1)
-        print('a args:', a)
+        print('list args:', e.arguments)
         print('e args', e.target)
         if len(a) > 1 and strings.lower(a[0]) == strings.lower(
             self.connection.get_nickname()
         ):
             self.do_command(e, a[1].strip())
+        
+        if e.target == '#'+self.nickname:
+            # if the message is intended for this PiBot, then parse:
+            result = parseMessage(e.arguments)
+            if result is not True:
+                print(result)
+
         return
 
     def on_dccmsg(self, c, e):
