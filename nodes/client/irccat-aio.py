@@ -75,7 +75,7 @@ class AsyncIRCClient(SimpleIRCClient):
 
     def on_join(self, connection, event):
         connection.read_loop = asyncio.ensure_future(
-            main_loop(connection), loop=connection.reactor.loop
+            complete_asyncronously(connection), loop=connection.reactor.loop
         )
 
     def on_disconnect(self, connection, event):
@@ -90,7 +90,7 @@ class AsyncIRCClient(SimpleIRCClient):
 
 
 
-async def main_loop(connection):
+async def complete_asyncronously(connection):
     pass
 
 

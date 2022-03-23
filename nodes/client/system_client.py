@@ -45,13 +45,14 @@ load_dotenv(join(BASEDIR, '../.base.env'))
 
 
 class PiBot(SingleServerIRCBot):
-    def __init__(self, channel, nickname, server, port=6667, password='1234count', stat_interval=2):
+    def __init__(self, channel, deployment_id, server, port=6667, password='1234count', stat_interval=2):
         if isinstance(os.environ.get("STAT_WRITER_INTERVAL_SEC"), int): stat_interval = os.environ.get("STAT_WRITER_INTERVAL_SEC")
         SingleServerIRCBot.__init__(self, [(server, port, password)], nickname, nickname)
         self.channel = channel
         self.stat_interval = stat_interval
         self.password = password
-        self.nickname = nickname
+        self.nickname = deployment_id
+        self.deployment_id = deployment_id
 
     def on_nicknameinuse(self, c, e):
         c.nick(c.get_nickname() + "_")
@@ -64,17 +65,21 @@ class PiBot(SingleServerIRCBot):
         self.do_command(e, e.arguments[0])
 
     def on_pubmsg(self, c, e):
-        a = e.arguments[0].split(":", 1)
-        print('list args:', e.arguments[0])
-        print('e args', e.target)
-        if len(a) > 1 and strings.lower(a[0]) == strings.lower(
+        the_message = e.arguments[0]
+        target = the_message.split(':')[0]
+
+        print('the_message:', the_message)
+        print('target:', target)
+        if len(the_message.split(':')) > 1 and strings.lower(target) == strings.lower(
             self.connection.get_nickname()
         ):
-            self.do_command(e, a[1].strip())
+            message_txt = the_message.split(':', 1)[1]
+            print('message_txt:', message_txt)
+            self.do_command(e, message_txt.strip())
         
         if e.target == '#'+self.nickname:
             # if the message is intended for this PiBot, then parse:
-            result = parseMessage(e.arguments[0])
+            result = parseMessage(the_message)
             if result is not True:
                 print(result)
 
