@@ -62,13 +62,19 @@ class PiBot(SingleServerIRCBot):
         c.join('#'+self.nickname)
 
     def on_privmsg(self, c, e):
-        print('received private message:', e.arguments)
+        print('\nreceived private message:', e.arguments)
         self.do_command(e, e.arguments[0])
 
     def on_pubmsg(self, c, e):
         the_message = e.arguments[0]
         target = the_message.split(':')[0]
-        print('received message from controller:\n    {}'.format(the_message))
+
+        # we don't want to do anything right now with the main channel, which is
+        # only used more-or-less as a global firehose log of the system
+        if target == '#main':
+            return 
+
+        print('\nreceived message from controller:\n    {}'.format(the_message))
 
         # this block will fire if the command is sent to any other channel the bot
         # is in such as #main, if the command is prefaced with a direct message colon, i.e.
