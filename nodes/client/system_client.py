@@ -68,22 +68,20 @@ class PiBot(SingleServerIRCBot):
     def on_pubmsg(self, c, e):
         the_message = e.arguments[0]
         target = the_message.split(':')[0]
+        print('received message from controller:\n    {}'.format(the_message))
 
-        print('the_message:', the_message)
-        print('target:', target)
-        print('e.taget:', e.target)
-        print('self.nickname:', self.nickname)
+        # this block will fire if the command is sent to any other channel the bot
+        # is in such as #main, if the command is prefaced with a direct message colon, i.e.
+        #   test_bot:cmd::chng::pump1,on
         if len(the_message.split(':')) > 1 and strings.lower(target) == strings.lower(
             self.connection.get_nickname()
         ):
-            #message_txt = the_message.split(':', 1)[1]
-            print('message_txt:', the_message)
             self.do_command(e, the_message.strip())
         
+        # this block will fire if the command is sent as a public message
+        # to the channel of this node's deployment ID
         if e.target == '#'+self.nickname:
             # if the message is intended for this PiBot, then parse:
-            message_txt = the_message.split(':', 1)[1]
-            print('altered message_txt:', message_txt)
             result = parseMessage(the_message)
             if result is not True:
                 print(result)
