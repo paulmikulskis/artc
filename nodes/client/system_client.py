@@ -62,6 +62,7 @@ class PiBot(SingleServerIRCBot):
         c.join('#'+self.nickname)
 
     def on_privmsg(self, c, e):
+        print('received private message:', e.arguments)
         self.do_command(e, e.arguments[0])
 
     def on_pubmsg(self, c, e):

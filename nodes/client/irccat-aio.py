@@ -114,7 +114,7 @@ def main():
         6667,
         'control_bot',
         ['jumba_bot', 'pibot']
-        )
+    )
     client.connect()
 
     @app.route("/")
