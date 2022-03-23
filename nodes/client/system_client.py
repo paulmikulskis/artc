@@ -67,22 +67,14 @@ class PiBot(SingleServerIRCBot):
 
     def on_pubmsg(self, c, e):
         the_message = e.arguments[0]
-        target = the_message.split(':')[0]
+        #command = the_message.split(':')[0]
 
         # we don't want to do anything right now with the main channel, which is
         # only used more-or-less as a global firehose log of the system
-        if target == '#main':
+        if e.target == '#main':
             return 
 
         print('\nreceived message from controller:\n    {}'.format(the_message))
-
-        # this block will fire if the command is sent to any other channel the bot
-        # is in such as #main, if the command is prefaced with a direct message colon, i.e.
-        #   test_bot:cmd::chng::pump1,on
-        if len(the_message.split(':')) > 1 and strings.lower(target) == strings.lower(
-            self.connection.get_nickname()
-        ):
-            self.do_command(e, the_message.strip())
         
         # this block will fire if the command is sent as a public message
         # to the channel of this node's deployment ID
