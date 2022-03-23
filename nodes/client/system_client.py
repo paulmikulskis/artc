@@ -74,7 +74,7 @@ class PiBot(SingleServerIRCBot):
         
         if e.target == '#'+self.nickname:
             # if the message is intended for this PiBot, then parse:
-            result = parseMessage(e.arguments)
+            result = parseMessage(e.arguments[0])
             if result is not True:
                 print(result)
 
