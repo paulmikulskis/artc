@@ -71,17 +71,19 @@ class PiBot(SingleServerIRCBot):
 
         print('the_message:', the_message)
         print('target:', target)
+        print('e.taget:', e.target)
+        print('self.nickname:', self.nickname)
         if len(the_message.split(':')) > 1 and strings.lower(target) == strings.lower(
             self.connection.get_nickname()
         ):
-            message_txt = the_message.split(':', 1)[1]
-            print('message_txt:', message_txt)
-            self.do_command(e, message_txt.strip())
+            #message_txt = the_message.split(':', 1)[1]
+            print('message_txt:', the_message)
+            self.do_command(e, the_message.strip())
         
         if e.target == '#'+self.nickname:
             # if the message is intended for this PiBot, then parse:
             message_txt = the_message.split(':', 1)[1]
-            print('message_txt:', message_txt)
+            print('altered message_txt:', message_txt)
             result = parseMessage(the_message)
             if result is not True:
                 print(result)
