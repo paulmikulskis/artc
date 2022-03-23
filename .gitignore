@@ -1,3 +1,5 @@
 .env
 influx/*/*
 influxd.bolt
+
+*.pyc

@@ -25,14 +25,27 @@ The known commands are:
     dcc -- Let the bot invite you to a DCC CHAT connection.
 """
 
+from datetime import datetime, timedelta
 import functools
+import itertools
 import os
+import sys
+import threading
 import time
-from  irc.bot import SingleServerIRCBot
-from irc import strings
-from irc.client import ip_numstr_to_quad, ip_quad_to_numstr
+import irc
+from  irc.bot import SingleServerIRCBot, Channel, ExponentialBackoff, ServerSpec
+from irc.client import SimpleIRCClient, ip_numstr_to_quad, ip_quad_to_numstr
+from irc.dict import IRCDict
 from os.path import join, dirname, abspath
 from dotenv import load_dotenv
+from threading import Thread
+
+import more_itertools
+from apscheduler.schedulers.background import BackgroundScheduler
+
+
+scheduler = BackgroundScheduler()
+scheduler.start() 
 
 # Get the path to the directory this file is in
 BASEDIR = abspath(dirname(__file__))
@@ -56,15 +69,17 @@ class ControlBot(SingleServerIRCBot):
     def on_welcome(self, c, e):
         c.join(self.channel)
         for nick in self.nodenicks:
+            print('joining #'+nick)
             c.join('#'+nick)
 
     def on_privmsg(self, c, e):
         self.do_command(e, e.arguments[0])
 
     def on_pubmsg(self, c, e):
+        print('received public message:', e.arguments)
         if (e.target[1:] == self.nickname) or (e.target[1:] in self.nodenicks):
             if(e.arguments[0].split('::')[0] == 'stats'):
-                self.process_stats(e.arguments)
+                self.process_stats(e.arguments[0].split('::')[1])
 
         return
 
@@ -121,6 +136,229 @@ class ControlBot(SingleServerIRCBot):
             c.notice(nick, "Not understood: " + cmd)
 
 
+class ControlBotClient(SimpleIRCClient):
+
+    def __init__(
+        self,
+        server_list,
+        nickname,
+        realname,
+        _=None,
+        recon=ExponentialBackoff(),
+        **connect_params,
+    ):
+        super().__init__()
+        self.__connect_params = connect_params
+        self.channels = IRCDict()
+        specs = map(ServerSpec.ensure, server_list)
+        self.servers = more_itertools.peekable(itertools.cycle(specs))
+        self.recon = recon
+
+        self._nickname = nickname
+        self._realname = realname
+        for i in [
+            "disconnect",
+            "join",
+            "kick",
+            "mode",
+            "namreply",
+            "nick",
+            "part",
+            "quit",
+        ]:
+            self.connection.add_global_handler(i, getattr(self, "_on_" + i), -20)
+          
+        self._connect()
+
+    def on_welcome(self, c, e):
+        #c.join('#'+self.nickname)
+        c.join('#main')
+
+    def _connect(self):
+        """
+        Establish a connection to the server at the front of the server_list.
+        """
+        server = self.servers.peek()
+        try:
+            self.connect(
+                server.host,
+                server.port,
+                self._nickname,
+                server.password,
+                ircname=self._realname,
+                **self.__connect_params,
+            )
+        except irc.client.ServerConnectionError:
+            print('CONNECTION ERROR!')
+            pass
+
+    def _on_disconnect(self, connection, event):
+        self.channels = IRCDict()
+        self.recon.run(self)
+
+    def _on_join(self, connection, event):
+        print('JOINED')
+        ch = event.target
+        nick = event.source.nick
+        if nick == connection.get_nickname():
+            self.channels[ch] = Channel()
+        self.channels[ch].add_user(nick)
+
+    def _on_kick(self, connection, event):
+        nick = event.arguments[0]
+        channel = event.target
+
+        if nick == connection.get_nickname():
+            del self.channels[channel]
+        else:
+            self.channels[channel].remove_user(nick)
+
+    def _on_mode(self, connection, event):
+        t = event.target
+        if not irc.client.is_channel(t):
+            # mode on self; disregard
+            return
+        ch = self.channels[t]
+
+        modes = irc.modes.parse_channel_modes(" ".join(event.arguments))
+        for sign, mode, argument in modes:
+            f = {"+": ch.set_mode, "-": ch.clear_mode}[sign]
+            f(mode, argument)
+
+    def _on_namreply(self, connection, event):
+        """
+        event.arguments[0] == "@" for secret channels,
+                          "*" for private channels,
+                          "=" for others (public channels)
+        event.arguments[1] == channel
+        event.arguments[2] == nick list
+        """
+
+        ch_type, channel, nick_list = event.arguments
+
+        if channel == '*':
+            # User is not in any visible channel
+            # http://tools.ietf.org/html/rfc2812#section-3.2.5
+            return
+
+        for nick in nick_list.split():
+            nick_modes = []
+
+            if nick[0] in self.connection.features.prefix:
+                nick_modes.append(self.connection.features.prefix[nick[0]])
+                nick = nick[1:]
+
+            for mode in nick_modes:
+                self.channels[channel].set_mode(mode, nick)
+
+            self.channels[channel].add_user(nick)
+
+    def _on_nick(self, connection, event):
+        before = event.source.nick
+        after = event.target
+        for ch in self.channels.values():
+            if ch.has_user(before):
+                ch.change_nick(before, after)
+
+    def _on_part(self, connection, event):
+        nick = event.source.nick
+        channel = event.target
+
+        if nick == connection.get_nickname():
+            del self.channels[channel]
+        else:
+            self.channels[channel].remove_user(nick)
+
+    def _on_quit(self, connection, event):
+        nick = event.source.nick
+        for ch in self.channels.values():
+            if ch.has_user(nick):
+                ch.remove_user(nick)
+
+    def die(self, msg="Bye, cruel world!"):
+        """Let the bot die.
+
+        Arguments:
+
+            msg -- Quit message.
+        """
+
+        self.connection.disconnect(msg)
+        sys.exit(0)
+
+    def disconnect(self, msg="I'll be back!"):
+        """Disconnect the bot.
+
+        The bot will try to reconnect after a while.
+
+        Arguments:
+
+            msg -- Quit message.
+        """
+        self.connection.disconnect(msg)
+
+    @staticmethod
+    def get_version():
+        """Returns the bot version.
+
+        Used when answering a CTCP VERSION request.
+        """
+        return f"Python irc.bot ({irc._get_version()})"
+
+    def jump_server(self, msg="Changing servers"):
+        """Connect to a new server, possibly disconnecting from the current.
+
+        The bot will skip to next server in the server_list each time
+        jump_server is called.
+        """
+        if self.connection.is_connected():
+            self.connection.disconnect(msg)
+
+        next(self.servers)
+        self._connect()
+
+    def on_ctcp(self, connection, event):
+        """Default handler for ctcp events.
+
+        Replies to VERSION and PING requests and relays DCC requests
+        to the on_dccchat method.
+        """
+        nick = event.source.nick
+        if event.arguments[0] == "VERSION":
+            connection.ctcp_reply(nick, "VERSION " + self.get_version())
+        elif event.arguments[0] == "PING":
+            if len(event.arguments) > 1:
+                connection.ctcp_reply(nick, "PING " + event.arguments[1])
+        elif (
+            event.arguments[0] == "DCC"
+            and event.arguments[1].split(" ", 1)[0] == "CHAT"
+        ):
+            self.on_dccchat(connection, event)
+
+    def on_dccchat(self, connection, event):
+        pass
+
+    def on_nicknameinuse(self, c, e):
+        c.nick(c.get_nickname() + "_")
+
+    def on_privmsg(self, c, e):
+        pass
+
+    def on_pubmsg(self, c, e):
+        pass
+
+    def on_dccmsg(self, c, e):
+        pass
+
+    def on_dccchat(self, c, e):
+        pass
+
+    def process(self):
+        self.reactor.process_once()
+
+
+
+
 
 def statloop():
     pass
@@ -147,9 +385,17 @@ def main():
     nickname = sys.argv[3]
 
     nodenicks = ['pibot', 'jumba_bot']
+    server = 'sungbean.com'
+    nickname = 'pilisten'
+    channel = '#main'
+    port = 6667
+    password = '1234count'
+    nick = 'control_bot_server'
+
     bot = ControlBot(channel, nickname, server, nodenicks, port)
     bot.reactor.scheduler.execute_every(bot.stat_interval, functools.partial(statloop))
     bot.start()
+
 
 if __name__ == '__main__':
     main()

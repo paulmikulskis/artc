@@ -75,7 +75,7 @@ from . import message
 from . import schedule
 
 log = logging.getLogger(__name__)
-
+log.setLevel(10)
 
 class IRCError(Exception):
     "An IRC exception"
