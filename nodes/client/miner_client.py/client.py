@@ -102,18 +102,32 @@ class BraiinsOsClient:
         )
 
         for host in hosts_to_contact:
-            print(host)
             command = '{"command":"disablepool","parameter":'+str(pool_id)+'}'
-            print(command)
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(self.timeout)
-            sock.connect((host['ip'], host['port']))
-            log.info('sending "{}" to {}'.format(command, host['connect_string']))
-            sock.sendall(bytes(command, 'utf-8'))
-            response = sock.recv(8192)
-            data = response.decode('utf-8').strip()
-            # cuts off any extra data after the last bracket from decoding
-            data = "".join([data.rsplit("}" , 1)[0] , "}"])
-            data = json.loads(data)
-            print(data)
+            self.send_command(command, host)
+
+
+      
+    def send_command(self, command, host):
+        '''
+        sends a line of text (JSON) to a given host registered with this client
+
+        Parameters:
+            command (str):The string to send to the miner
+            host A dictionary of values from a host registered with this client
+
+        Returns:
+            MinerResponse, MinerAPIError or Null   
+        '''
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(self.timeout)
+        sock.connect((host['ip'], host['port']))
+        log.info('sending "{}" to {}'.format(command, host['connect_string']))
+        sock.sendall(bytes(command, 'utf-8'))
+        response = sock.recv(8192)
+        data = response.decode('utf-8').strip()
+        # cuts off any extra data after the last bracket from decoding
+        data = "".join([data.rsplit("}" , 1)[0] , "}"])
+        data = json.loads(data)
+        print(data)
+        return 
 
