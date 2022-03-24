@@ -5,6 +5,7 @@
 # This program is free without restrictions; do anything you like with
 # it.
 
+import os
 from sqlite3 import connect
 import string
 import sys
@@ -20,12 +21,24 @@ from irc.client_aio import AioSimpleIRCClient
 from irc.client import SimpleIRCClient
 from irc.client_aio import AioReactor
 
+from os.path import join, dirname, abspath
+from dotenv import load_dotenv
+
 from quart import Quart, request
 import quart.flask_patch
 
 app = Quart(__name__)
 
-target = None
+# Get the path to the directory this file is in
+# and pull the .env file
+BASEDIR = abspath(dirname(__file__))
+load_dotenv(join(BASEDIR, '../../.env'))
+if not isinstance(os.environ.get("IRC_PROXY_HOST"), str):
+    print('ERROR: unable to find IRC_PROXY_HOST in .env configuration... \
+        \ncurrent environment variables:\n{}'.format(
+            '\n'.join(os.environ.keys())
+        ))
+    sys.exit(69)
         
 class AsyncIRCClient(SimpleIRCClient):
 
@@ -68,9 +81,11 @@ class AsyncIRCClient(SimpleIRCClient):
         return self.reactor.loop
 
     def on_welcome(self, connection, event):
-        for id in self.nodenicks + ['main']:
+        for id in self.nodenicks:
             print('connecting to {}'.format('#'+id))
             connection.join('#'+id)
+
+        connection.join('#main')
 
 
     def on_join(self, connection, event):
@@ -97,43 +112,81 @@ async def complete_asyncronously(connection):
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('server')
-    parser.add_argument('nickname')
-    parser.add_argument('target', help="a nickname or channel")
-    parser.add_argument('--password', default=None, help="optional password")
-    parser.add_argument('-p', '--port', default=6667, type=int)
+    parser.add_argument(
+        'server',
+        default='sungbean.com',
+        help='hostname of the IRC server this client should proxy requests to',
+        type=str
+    )
+    parser.add_argument(
+        'nick',
+        default='proxy_default',
+        help='deployment ID of this IRC HTTP Proxy, default is proxy_default',
+        type=str
+    )
+    parser.add_argument(
+        'nodenicks', 
+        default='jumba_bot,pibot',
+        help="comma-delineated list of nodes to proxy to \
+            (#main is included by default)\n  e.g. jumba_bot,pibot",
+        type=str
+    ),
+    parser.add_argument(
+        '--password', 
+        default=None, 
+        help="optional password for the IRC server"
+    )
+    parser.add_argument(
+        '-p', 
+        '--port', 
+        default=6667, 
+        type=int
+    )
     jaraco.logging.add_arguments(parser)
     return parser.parse_args()
 
 
 def main():
-    global target
+    args = get_args()
+    jaraco.logging.setup(args)
     
+    nodenicks = args.nodenicks.split(',')
+    print('NICKS',nodenicks)
+    nodenicks = [nick.strip() for nick in nodenicks]
+    print('NICKS 2',nodenicks)
+
     client = AsyncIRCClient(
-        'sungbean.com',
-        6667,
-        'control_bot',
-        ['jumba_bot', 'pibot']
+        host=args.server,
+        port=args.port,
+        nick=args.nick,
+        nodenicks=nodenicks,
+        password=args.password
     )
     client.connect()
+
 
     @app.route("/")
     async def home():
         return "Hello, World!"
 
+
     @app.route("/command", methods=['POST'])
     async def command():
+        # force=True will parse even without Application/Json Header
         data = await request.get_json(force=True)
-        print('REQEST DATA:', data)
+        print('RECEIVED REQEST DATA:', data)
         id = data['id']
         command = data['command']
         param_string = data['params']
         params = param_string
+
+        # params are delineated by a comma, in case wish to do something with them:
         if params is not None:
             params = params.split(',')
 
         print('sending to {}, {}'.format('#'+id, 'cmd::'+command+'::'+param_string))
         client.message('#'+id, 'cmd::'+command+'::'+param_string)
+        # also send the message to #main for visibility via the system firehose
         client.message('#main', 'cmd::'+command+'::'+param_string)
         return 'success'
 

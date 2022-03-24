@@ -1,0 +1,13 @@
+# BraiinsOs detailed documentation on GitHub:\
+#   https://github.com/KoreNBeatZ/braiins-os/blob/master/docs/index.md
+
+
+[[group]]
+name = 'Default'
+quota = 1
+
+[[group.pool]]
+enabled = false
+url = 'stratum2+tcp://v2.us-east.stratum.slushpool.com/u95GEReVMjK6k5YqiSFNqqTnKU4ypU2Wm8awa6tmbmDmk1bWt'
+user = 'mikulskisp.S9_test'
+password = '1234count'

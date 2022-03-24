@@ -3,3 +3,4 @@ influx/*/*
 influxd.bolt
 
 *.pyc
+braiins-os*
