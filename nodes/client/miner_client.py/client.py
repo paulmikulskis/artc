@@ -331,9 +331,9 @@ class BraiinsOsClient:
         if len(error) > 1:
             return None, error[0]
         return [
-          (d['Board'], d['Chip'], d['ID'])
+          [ (d['Board'], d['Chip'], d['ID'])
           for resp in temps
-          for d in resp.data
+          for d in resp.data ]
         ]
 
     
