@@ -9,6 +9,7 @@ import pprint
 import socket
 from sys import stderr
 import time
+from tkinter import E
 from typing import Dict, List, Tuple
 from unittest import result
 import paramiko
@@ -272,7 +273,10 @@ class BraiinsOsClient:
         user = self.user
         password = host['password']
         print(' paramiko attempting to connect to {} as {}:{}'.format(host['ip'], user, password))
-        ssh.connect(host['ip'], username=user, password=password)
+        try:
+            ssh.connect(host['ip'], username=user, password=password)
+        except Exception as e:
+            return None, self._format_MinerAPIResponse('E', 'unable to reach miner via SSH', 404)
         ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(command)
         err = ssh_stderr.read().decode('utf-8')
         out = ssh_stdout.read().decode('utf-8')
@@ -416,7 +420,10 @@ class BraiinsOsClient:
         '''
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(self.timeout)
-        sock.connect((host['ip'], host['port']))
+        try:
+            sock.connect((host['ip'], host['port']))
+        except ConnectionRefusedError as e:
+            return self._format_MinerAPIResponse('E', 'unable to reach miner', 404)
         log.info('sending "{}" to {}'.format(command, host['connect_string']))
         sock.sendall(bytes(command, 'utf-8'))
         response = sock.recv(8192)
