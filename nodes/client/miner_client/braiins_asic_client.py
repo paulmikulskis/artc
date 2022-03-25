@@ -9,7 +9,6 @@ import pprint
 import socket
 from sys import stderr
 import time
-from tkinter import E
 from typing import Dict, List, Tuple
 from unittest import result
 import paramiko
