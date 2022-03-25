@@ -36,6 +36,8 @@ from system.system import device_map
 from run.influx_wrapper import InfluxStatWriter
 from os.path import join, dirname, abspath
 from dotenv import load_dotenv
+from client.miner_client.braiins_asic_client import BraiinsOsClient
+
 
 from system.system import stat_map
 
@@ -112,7 +114,6 @@ class PiBot(SingleServerIRCBot):
             if result is not True:
                 print(result)
 
-
         if cmd == "disconnect":
             self.disconnect()
         elif cmd == "die":
@@ -143,11 +144,16 @@ class PiBot(SingleServerIRCBot):
 Main loop that defines the frequency of global stat updates
 to the server and InfluxDB
 '''
-def statloop(influx_stat_writer: InfluxStatWriter, irc_connection: ServerConnection):
+def statloop(influx_stat_writer: InfluxStatWriter, braiins: BraiinsOsClient, irc_connection: ServerConnection):
     print('\nsending stats...')
     stats = {k: v() for k, v in stat_map.items()}
-    influx_stat_writer.write_dict('test', stats)
+    influx_stat_writer.write_dict('test', stats)    
     irc_connection.privmsg('#'+irc_connection.nickname, 'stats::'+str(stats))
+    temps = braiins.get_temperature_list()[0]  # assuming there is no error atm
+    is_mining = braiins.is_mining()
+    for k, v in temps.items():
+        temps[k] = {**v, 'mining': is_mining.get(k) or 'UNKNOWN'}
+    irc_connection.privmsg('#'+irc_connection.nickname, 'miner::'+str(temps))
 
 
 def main():
@@ -169,10 +175,13 @@ def main():
         port = 6667
     channel = sys.argv[2]
     nickname = sys.argv[3]
-    influx_stat_writer = InfluxStatWriter(os.environ.get("INFLUX_HOST"))
-    device_map['flow1'].listen()
 
+    # instantiate loop-running classes, writers, listeners here:
+    influx_stat_writer = InfluxStatWriter(os.environ.get("INFLUX_HOST"))
+    braiins = BraiinsOsClient(os.environ.get("MINING_HOST"), password=os.environ.get("MINING_PASSWORD"))
     bot = PiBot(channel, nickname, server, port)
-    bot.reactor.scheduler.execute_every(bot.stat_interval, functools.partial(statloop, influx_stat_writer, bot.connection))
+
+    device_map['flow1'].listen()
+    bot.reactor.scheduler.execute_every(bot.stat_interval, functools.partial(statloop, influx_stat_writer, braiins, bot.connection))
     bot.start()
 

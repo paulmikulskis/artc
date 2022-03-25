@@ -78,7 +78,7 @@ class ControlBot(SingleServerIRCBot):
     def on_pubmsg(self, c, e):
         print('received public message:', e.arguments)
         if (e.target[1:] == self.nickname) or (e.target[1:] in self.nodenicks):
-            if(e.arguments[0].split('::')[0] == 'stats'):
+            if(e.arguments[0].split('::')[0] == 'stats' or e.arguments[0].split('::')[0] == 'miner'):
                 self.process_stats(e.arguments[0].split('::')[1])
 
         return

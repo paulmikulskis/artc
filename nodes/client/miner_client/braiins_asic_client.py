@@ -8,7 +8,8 @@ import logging
 import pprint
 import socket
 from sys import stderr
-from typing import List, Tuple
+import time
+from typing import Dict, List, Tuple
 from unittest import result
 import paramiko
 
@@ -210,6 +211,27 @@ class BraiinsOsClient:
         return resps
 
 
+    def is_mining(self, hosts: List[str] or str = None):
+        '''
+        returns a set of booleans on whether the miners are mining
+
+        Parameters:
+            hosts (List[str] or str or None):The host or list of hosts to send this command to
+
+        Returns:
+            [bool]
+        '''
+        if ((not isinstance(hosts, list) and (hosts is not None))): hosts = [hosts]
+        COMMAND = 'ps | grep "/usr/bin/bosminer" | grep -v grep'
+        resps = {}
+        for host in self.filter_hosts_to_contact(hosts):
+            out, err = self._send_ssh_command(COMMAND, host)
+            if out is not None: resps[host['hostname']] = True
+            else: resps[host['hostname']] = False
+
+        return resps
+
+
     def _format_MinerAPIResponse(self, status_letter: CHAR, msg: str, code: int, when: datetime.datetime=None, data=None) -> MinerAPIResponse:
         '''
         formats a set of return values to create a MinerAPIResponse
@@ -252,9 +274,11 @@ class BraiinsOsClient:
         print(' paramiko attempting to connect to {} as {}:{}'.format(host['ip'], user, password))
         ssh.connect(host['ip'], username=user, password=password)
         ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(command)
+        err = ssh_stderr.read().decode('utf-8')
+        out = ssh_stdout.read().decode('utf-8')
+        if len(err) == 0: err = None
+        if len(out) == 0: out = None
         ssh.close()
-        err = ssh_stderr.close()
-        out = ssh_stdout.close()
         return out, err
 
 
@@ -299,7 +323,7 @@ class BraiinsOsClient:
         return results
 
 
-    def get_temperatures(self, hosts: List[str] = None) -> List[MinerAPIResponse]:
+    def get_temperatures(self, hosts: List[str] = None) -> List[Tuple[str, MinerAPIResponse]]:
         '''
         gets the termperature readings of the given hosts
 
@@ -313,13 +337,13 @@ class BraiinsOsClient:
         results = []
         for host in self.filter_hosts_to_contact(hosts):
             command = '{"command":"temps"}'
-            results.append(self.send_command(command, host))
+            results.append((host['hostname'], self.send_command(command, host)))
 
         return results
 
 
     def get_temperature_list(self) \
-      -> Tuple[ List[Tuple[float, float, int]] or None, (MinerAPIError or None) ]:
+      -> Tuple[Dict[str, List[Tuple[str]]], MinerAPIError or None]:
         '''
         returns a list of parsed temperature readings from all hosts
 
@@ -327,14 +351,17 @@ class BraiinsOsClient:
             tuple(List(tuple(board_temp, chip_temp, id)) or None, MinerAPIError or None)
         '''
         temps = self.get_temperatures()
-        error = list(filter(lambda x: x, map(lambda x: x.error, temps)))
+        error = list(filter(lambda x: x, map(lambda x: x[1].error, temps)))
         if len(error) > 1:
             return None, error[0]
-        return [
-          [ (d['Board'], d['Chip'], d['ID'])
-          for resp in temps
-          for d in resp.data ]
-        ]
+        return {
+           resp[0]: [
+              (d['Board'], d['Chip'], d['ID'])
+                for resp in temps
+                for d in resp[1].data
+            ] 
+            for resp in temps 
+        }, None
 
     
     def get_details(self, hosts: List[str] = None) -> List[MinerAPIResponse]:
