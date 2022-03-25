@@ -416,7 +416,10 @@ class BraiinsOsClient:
         '''
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(self.timeout)
-        sock.connect((host['ip'], host['port']))
+        try:
+            sock.connect((host['ip'], host['port']))
+        except ConnectionRefusedError as e:
+            return self._format_MinerAPIResponse('E', 'unable to reach miner', 404)
         log.info('sending "{}" to {}'.format(command, host['connect_string']))
         sock.sendall(bytes(command, 'utf-8'))
         response = sock.recv(8192)
