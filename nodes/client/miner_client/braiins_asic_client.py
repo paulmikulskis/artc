@@ -280,13 +280,18 @@ class BraiinsOsClient:
         user = self.user
         password = host['password']
         print(' paramiko attempting to connect to {} as {}:{}'.format(host['ip'], user, password))
-        ssh.connect(host['ip'], username=user, password=password)
-        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(command)
-        err = ssh_stderr.read().decode('utf-8')
-        out = ssh_stdout.read().decode('utf-8')
-        if len(err) == 0: err = None
-        if len(out) == 0: out = None
-        ssh.close()
+        try:
+            ssh.connect(host['ip'], username=user, password=password)
+            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(command)
+            err = ssh_stderr.read().decode('utf-8')
+            out = ssh_stdout.read().decode('utf-8')
+            if len(err) == 0: err = None
+            if len(out) == 0: out = None
+            ssh.close()
+        except Exception as e:
+            out = None
+            err = 'unable to SSH to {} as {}:{}'.format(host['ip'], user, password)
+
         return out, err
 
 
