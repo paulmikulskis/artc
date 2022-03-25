@@ -351,7 +351,7 @@ class BraiinsOsClient:
 
 
     def get_temperature_list(self) \
-      -> Tuple[Dict[str, List[Tuple[str]]], MinerAPIError or None]:
+      -> Tuple[Dict[str, List[Tuple[str]]] or None, MinerAPIError or None]:
         '''
         returns a list of parsed temperature readings from all hosts
 
