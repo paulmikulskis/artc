@@ -33,7 +33,7 @@ def executeMinerFunction(command, hosts=None):
     if not miner_clients:
         return PiError(
           ErrorType.NO_DEVICE,
-          'no miner clients registered, device names: {}'.format(list(map(lambda x: x[1].name, device_map.items()))),
+          'no miner clients registered, device names: {}'.format(list(map(lambda x: x[0], device_map.items()))),
           404
         )
     return map(lambda x: x.process_command(command, hosts), miner_clients)
