@@ -4,7 +4,8 @@ Dictionary of all the device and sensor types on the system
 '''
 import functools
 from typing import Dict
-from nodes.system.device import Device
+from client.miner_client.braiins_asic_client import BraiinsOsClient
+from system.device import Device
 from system.device import RelaySwitch, HallEffectFlowSensor, OneWireThermister
 from digitalio import DigitalInOut, Direction
 import board
@@ -24,7 +25,8 @@ THERMISTOR_ADDRESSES = {
 device_map: Dict[str, Device] = {
     'pump1': RelaySwitch('pump1', False, DigitalInOut(board.D21)),
     'flow1': HallEffectFlowSensor('flow1', 12),
-    'therm1': OneWireThermister('therm1', 1, THERMISTOR_ADDRESSES)
+    'therm1': OneWireThermister('therm1', 1, THERMISTOR_ADDRESSES),
+    'miners': BraiinsOsClient('antminer')
 }
 
 # list out all the stats to be collected and shipped
