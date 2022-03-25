@@ -15,6 +15,7 @@ def executeChangeCommand(device_name, newValue, speed=None):
 
 
 def executeFunction(function_name, function_params):
+    print('executing FUNC message..\n  function_name: {}\n  params: {}'.format(function_name, function_params))
     if function_name == None:
         return PiError(
             ErrorType.NO_DEVICE,
