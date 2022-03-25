@@ -436,7 +436,7 @@ class BraiinsOsClient:
         sock.settimeout(self.timeout)
         try:
             sock.connect((host['ip'], host['port']))
-        except ConnectionRefusedError or OSError as e:
+        except Exception as e:
             return self._format_MinerAPIResponse('E', 'unable to reach miner', 404)
         log.info('sending "{}" to {}'.format(command, host['connect_string']))
         sock.sendall(bytes(command, 'utf-8'))
