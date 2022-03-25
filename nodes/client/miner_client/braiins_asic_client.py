@@ -98,7 +98,7 @@ class MinerAPIResponse:
 
     def __str__(self):
         return '{}'.format(
-            json.dumps({
+            str({
                 'code': self.code,
                 'response_type': self.type.value,
                 'message': self.message,
