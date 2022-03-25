@@ -105,8 +105,7 @@ class MinerAPIResponse:
                 'time': self.time.strftime('%b-%d %H:%M:%S'),
                 'error': self.error,
                 'data': self.data
-                },
-                indent=2
+                }
             )
         )
           
