@@ -23,7 +23,7 @@ import RPi.GPIO as GPIO
 import digitalio
 import board
 from messages.types import ErrorType, PiError
-from nodes.client.miner_client.braiins_asic_client import BraiinsOsClient
+from client.miner_client.braiins_asic_client import BraiinsOsClient
 from w1thermsensor import W1ThermSensor, Sensor, Unit
 
 
