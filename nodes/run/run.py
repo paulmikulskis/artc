@@ -28,6 +28,8 @@ def executeFunction(function_name, function_params):
 
 def executeMinerFunction(command, hosts=None):
     miner_clients: List[SystemMiners] = filter(lambda x: isinstance(x[1], SystemMiners), device_map.items())
+    print('  executing Miner Function...')
+    print('  clients to address: {}'.format(miner_clients))
     if not miner_clients:
         return PiError(
           ErrorType.NO_DEVICE,
