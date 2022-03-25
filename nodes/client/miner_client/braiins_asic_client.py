@@ -326,7 +326,7 @@ class BraiinsOsClient:
         return results
 
 
-    def get_temperatures(self, hosts: List[str] = None) -> List[Tuple[str, MinerAPIResponse]]:
+    def get_temperatures(self, hosts: List[str] = None) -> List[Tuple[str, Tuple[MinerAPIResponse or None, MinerAPIResponse or None]]]:
         '''
         gets the termperature readings of the given hosts
 
@@ -354,14 +354,14 @@ class BraiinsOsClient:
             tuple(List(tuple(board_temp, chip_temp, id)) or None, MinerAPIError or None)
         '''
         temps = self.get_temperatures()
-        error = list(filter(lambda x: x, map(lambda x: x[1].error, temps)))
+        error = list(filter(lambda x: x, map(lambda x: x[1][1].error, temps)))
         if len(error) > 1:
             return None, error[0]
         return {
            resp[0]: [
               (d['Board'], d['Chip'], d['ID'])
                 for resp in temps
-                for d in resp[1].data
+                for d in resp[1][0].data
             ] 
             for resp in temps 
         }, None
@@ -406,7 +406,7 @@ class BraiinsOsClient:
         return dicts
 
       
-    def send_command(self, command, host):
+    def send_command(self, command, host) -> Tuple[MinerAPIResponse or  None, MinerAPIResponse or None]:
         '''
         sends a line of text (JSON) to a given host registered with this client
 
@@ -422,7 +422,7 @@ class BraiinsOsClient:
         try:
             sock.connect((host['ip'], host['port']))
         except ConnectionRefusedError as e:
-            return self._format_MinerAPIResponse('E', 'unable to reach miner', 404)
+            return None, self._format_MinerAPIResponse('E', 'unable to reach miner', 404)
         log.info('sending "{}" to {}'.format(command, host['connect_string']))
         sock.sendall(bytes(command, 'utf-8'))
         response = sock.recv(8192)
@@ -433,5 +433,5 @@ class BraiinsOsClient:
         resp = MinerAPIResponse(data)
         # print('miner response:')
         # print(resp)
-        return resp
+        return resp, None
 
