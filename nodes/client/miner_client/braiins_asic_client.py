@@ -58,48 +58,56 @@ class MinerAPIError:
 
 class MinerAPIResponse:
 
-      def __init__(self, resp: dict):
-          self.resp = resp
-          status = self.resp['STATUS']
-          if isinstance(status, list):
-              if len(self.resp.keys()) > 1:
-                  self.data = resp[list(self.resp.keys())[1]]
-              status = status[0]
-              self.status = status
-              self.message = status['Msg']
-              self.code = int(status['Code'])
-              time_int = status['When']
-              self.type = MinerAPIResponseType.SUCCESS
-              if self.code in MinerAPIErrorCodes.keys():
-                  self.type = MinerAPIErrorCodes[self.code]
-              if time_int:
-                  self.time = datetime.datetime.fromtimestamp(time_int)
-              else:
-                  self.time = None
-              if status['STATUS'] == 'E':
-                  self.error = MinerAPIError(
-                    self.message,
-                    self.code,
-                    self.message
-                  )
-              else:
-                  self.error = None
+    def __init__(self, resp: dict):
+        self.resp = resp
+        status = self.resp['STATUS']
+        if isinstance(status, list):
+            if len(self.resp.keys()) > 1:
+                self.data = resp[list(self.resp.keys())[1]]
+            else: self.data = None
+    
+            status = status[0]
+            self.status = status
+            self.message = status['Msg']
+            self.code = int(status['Code'])
+            time_int = status['When']
+            self.type = MinerAPIResponseType.SUCCESS
+            if self.code in MinerAPIErrorCodes.keys():
+                self.type = MinerAPIErrorCodes[self.code]
+            if time_int:
+                self.time = datetime.datetime.fromtimestamp(time_int)
+            else:
+                self.time = None
+            if status['STATUS'] == 'E':
+                self.error = MinerAPIError(
+                self.message,
+                self.code,
+                self.message
+                )
+            else:
+                self.error = None
+        else:
+            self.code = -1
+            self.response_type = MinerAPIResponseType.MINER_ERROR,
+            self.message = 'unrecognized error response',
+            self.time = datetime.datetime.now(),
+            self.error = 'unrecognized error response',
+            self.data = None
       
 
-      def __str__(self):
-
-          return '{}'.format(
-              json.dumps({
-                  'code': self.code,
-                  'response_type': self.type.value,
-                  'message': self.message,
-                  'time': self.time.strftime('%b-%d %H:%M:%S'),
-                  'error': self.error,
-                  'data': self.data
-                  },
-                  indent=2
-              )
-          )
+    def __str__(self):
+        return '{}'.format(
+            json.dumps({
+                'code': self.code,
+                'response_type': self.type.value,
+                'message': self.message,
+                'time': self.time.strftime('%b-%d %H:%M:%S'),
+                'error': self.error,
+                'data': self.data
+                },
+                indent=2
+            )
+        )
           
 
 class BraiinsOsClient:
