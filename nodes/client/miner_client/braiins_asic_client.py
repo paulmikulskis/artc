@@ -365,12 +365,7 @@ class BraiinsOsClient:
             print('error:', api.error)
             print('api:', api)
             if api.error:
-                print('appending error!!!!')
-                errors.append(api.error)
-        #error = list(filter(lambda y: y is not None, map(lambda x: x[1].error, temps)))
-        if len(errors) > 1:
-            print('returning the BAAAD')
-            return None, errors[0]
+                return None, api.error
 
         return {
            resp[0]: [
