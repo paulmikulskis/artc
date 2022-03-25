@@ -53,7 +53,7 @@ class MinerAPIError:
         self.date = time
 
     def __str__(self):
-        return '[{}]: {}: {}'.format(self.date, self.code, self.msg)
+        return '{}: {}'.format(self.code, self.msg)
 
 
 class MinerAPIResponse:
