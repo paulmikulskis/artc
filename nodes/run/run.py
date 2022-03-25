@@ -1,6 +1,6 @@
 from typing import List
 from messages.types import ErrorType, PiError
-from nodes.system.device import SystemMiners
+from system.device import SystemMiners
 from system.system import device_map
 
 def executeChangeCommand(device_name, newValue, speed=None):
