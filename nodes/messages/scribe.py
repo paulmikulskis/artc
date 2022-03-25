@@ -2,7 +2,7 @@
 from email.message import Message
 from operator import le
 import string
-from nodes.run.run import executeFunction
+from run.run import executeFunction
 
 from run.run import executeChangeCommand
 from . import types
