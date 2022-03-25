@@ -351,7 +351,7 @@ class BraiinsOsClient:
             tuple(List(tuple(board_temp, chip_temp, id)) or None, MinerAPIError or None)
         '''
         temps = self.get_temperatures()
-        error = list(filter(lambda x: not x, map(lambda x: x[1].error, temps)))
+        error = list(filter(lambda x: x is not None, map(lambda x: x[1].error, temps)))
         if len(error) > 1:
             return None, error[0]
         return {
