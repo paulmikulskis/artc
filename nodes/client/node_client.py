@@ -154,8 +154,10 @@ def statloop(influx_stat_writer: InfluxStatWriter, braiins: BraiinsOsClient, irc
     if temps[1]:
         temps = temps[1]
     else:
+        temps = temps[0]
         for k, v in temps.items():
                 temps[k] = {**{'board_'+str(d[2]): {'board': d[0], 'chip': d[1]} for d in v}, 'mining': is_mining.get(k) or 'UNKNOWN'}
+                
     irc_connection.privmsg('#'+irc_connection.nickname, 'miner::'+str(temps))
 
 
