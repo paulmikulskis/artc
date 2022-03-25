@@ -59,6 +59,7 @@ class MinerAPIError:
 class MinerAPIResponse:
 
     def __init__(self, resp: dict):
+        self.data = None
         self.resp = resp
         status = self.resp['STATUS']
         if isinstance(status, list):
