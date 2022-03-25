@@ -49,7 +49,7 @@ class SystemMiners(Device):
         if command == 'stop' or command == 'stop_mining' or command == 'false' or command == False or command == 0:
             self.stop_mining(hostnames)
         if command == 'start' or command == 'start_mining' or command == 'true' or command == True or command == 1:
-            self.stop_mining(hostnames)
+            self.start_mining(hostnames)
 
 
 '''
