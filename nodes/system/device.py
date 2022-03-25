@@ -17,11 +17,13 @@ for example:
 from abc import abstractmethod
 import time
 from datetime import datetime, timedelta
-import sys                      # Import sys module
+import sys
+from typing import List                      # Import sys module
 import RPi.GPIO as GPIO
 import digitalio
 import board
 from messages.types import ErrorType, PiError
+from nodes.client.miner_client.braiins_asic_client import BraiinsOsClient
 from w1thermsensor import W1ThermSensor, Sensor, Unit
 
 
@@ -29,6 +31,25 @@ from w1thermsensor import W1ThermSensor, Sensor, Unit
 class Device:
     def __init__(self, name):
         self.name = name
+
+
+class SystemMiners(Device):
+
+    def __init__(self, hostnames: List[str] or str, name='miners', port=4028, timeout=10, password='1234count'):
+        super().__init__(name)
+        self.client = BraiinsOsClient(hostnames, port=port, timeout=10, password=password)
+
+    def start_mining(self, hostnames: List[str] or str):
+        self.client.start_miner(hostnames)
+    
+    def stop_mining(self, hostnames: List[str] or str):
+        self.client.stop_miner(hostnames)
+
+    def process_command(self, command, hostnames):
+        if command == 'stop' or command == 'stop_mining' or command == 'false' or command == False or command == 0:
+            self.stop_mining(hostnames)
+        if command == 'start' or command == 'start_mining' or command == 'true' or command == True or command == 1:
+            self.stop_mining(hostnames)
 
 
 '''

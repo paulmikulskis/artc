@@ -20,9 +20,12 @@ class Commands(Enum):
     # for reading a value
     READ = 'read'
     # for altering the value of a pin
+    # e.x. chng::pump1,on
     CHANGE_STATE = 'chng'
     # for running a a server function
+    # e.x. func::miners::start
     FUNCTION = 'func'
+
 
 
 '''

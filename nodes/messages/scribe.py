@@ -1,6 +1,8 @@
 
+from email.message import Message
 from operator import le
 import string
+from nodes.run.run import executeFunction
 
 from run.run import executeChangeCommand
 from . import types
@@ -22,6 +24,24 @@ def parseMessage(msg: string) -> bool or types.PiError :
             400
           )
         command_type = parts[1]
+        if command_type == types.Commands.FUNCTION.value:
+          if len(parts) < 2: 
+              return types.PiError(
+                types.ErrorType.INVALID_PARAMS,
+                'cmd FUNC received but no arguments specified',
+                400
+              )
+          else:
+              function_name = parts[2]
+              function_params = parts[3].split(',') if len(parts) > 2 else []
+              if len(function_name) < 1:
+                  return types.PiError(
+                    types.ErrorType.INVALID_PARAMS,
+                    'cmd FUNC received no function name specified',
+                    400
+                  )
+
+              return executeFunction(function_name, function_params)
         if command_type == types.Commands.CHANGE_STATE.value:
           if len(parts) < 2: 
               return types.PiError(
@@ -38,6 +58,8 @@ def parseMessage(msg: string) -> bool or types.PiError :
                     400
                   )
               return executeChangeCommand(*args)
+    
+
 
     if message_type == types.Messages.STATPULL.value:
         return True

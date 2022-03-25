@@ -1,5 +1,5 @@
 
-from client.control_client import main
+from client.control_client.control_client import main
 
 
 
