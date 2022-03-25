@@ -36,6 +36,7 @@ def executeMinerFunction(command, hosts=None):
           'no miner clients registered, device names: {}'.format(list(map(lambda x: x[0], device_map.items()))),
           404
         )
-    return map(lambda x: x.process_command(command, hosts), miner_clients)
+    print('about to execute {} on {}'.format(command, hosts))
+    return list(map(lambda x: x.process_command(command, hosts), miner_clients))
 
     
