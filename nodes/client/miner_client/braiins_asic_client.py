@@ -42,6 +42,8 @@ MinerAPIErrorCodes = {
     69: MinerAPIResponseType.SUCCESS,
     # SSH error
     -1: MinerAPIResponseType.SSH_ERROR,
+    # Host or resource cannot be found
+    404: MinerAPIResponseType.CANNOT_CONNECT
 
 }
 
