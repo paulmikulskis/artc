@@ -99,17 +99,24 @@ class MinerAPIResponse:
       
 
     def __str__(self):
-        return '{}'.format(
-            str({
-                'code': self.code,
-                'response_type': self.type.value,
-                'message': self.message,
-                'time': self.time.strftime('%b-%d %H:%M:%S'),
-                'error': self.error,
-                'data': self.data
-                }
-            )
-        )
+        return str({
+            'code': self.code,
+            'response_type': self.type.value,
+            'message': self.message,
+            'time': self.time.strftime('%b-%d %H:%M:%S'),
+            'error': self.error,
+            'data': self.data
+            })
+
+    def json(self):
+        return json.dumps({
+            'code': self.code,
+            'response_type': self.type.value,
+            'message': self.message,
+            'time': self.time.strftime('%b-%d %H:%M:%S'),
+            'error': str(self.error),
+        })
+
           
 
 class BraiinsOsClient:
