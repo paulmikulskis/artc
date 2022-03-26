@@ -34,7 +34,7 @@ from  irc.bot import SingleServerIRCBot
 from irc import strings
 from irc.client import ip_numstr_to_quad, ip_quad_to_numstr, ServerConnection
 from messages.scribe import parseMessage
-from nodes.client.miner_client.braiins_asic_client import MinerAPIError
+from client.miner_client.braiins_asic_client import MinerAPIError
 from system.system import device_map
 from run.influx_wrapper import InfluxStatWriter
 from os.path import join, dirname, abspath
