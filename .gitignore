@@ -4,3 +4,5 @@ influxd.bolt
 
 *.pyc
 braiins-os*
+*.log
+irc_examples
