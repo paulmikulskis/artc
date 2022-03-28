@@ -3,7 +3,6 @@ import json
 from typing import Dict, List
 from irc.client import ServerConnection, Event
 from client.control_client.control_program_base import Program, ProgramFunctionBase
-from system.system import device_map
 
 FIELD_SEPRATATOR = '::'
 
@@ -36,7 +35,7 @@ class HandOnOffTest(ProgramFunctionBase):
         # message holds the entire text encoded message i.e. 'stats::{"some": 1, "stats": 2.3}'
         message: str = self.message
         # message_history holds the last n messages as configured by this Program base
-        message_history: List[str] = self.message_history
+        message_history: List[str] = self.event_history
         # return history holds the last n return values of this 'run()' function
         return_history: List[any] = self.return_history
         # connections holds the ServerConnection object from the IRC client that is used to
@@ -59,6 +58,13 @@ class HandOnOffTest(ProgramFunctionBase):
         if stats == None:
             print(' !! No stats in history')
             return False
+
+        stats = stats.message()
+        stats = stats.split('::', 1)
+        if len(stats) < 2:
+            return False
+        stats = stats[1]
+        print('{} program got stats.message:\n  {}'.format(self.name, stats))
         try:
             stats = json.loads(stats)
         except:
@@ -68,9 +74,13 @@ class HandOnOffTest(ProgramFunctionBase):
             context.phase = 'rest'
 
         hall1 = stats.get('hall1')
-        pump1 = stats.get('pump1') or False
-        therm1 = stats.get('therm1') or 0
-        therm2 = stats.get('therm2') or 0
+        pump1 = stats.get('pump1')
+        therm1 = stats.get('therm1')
+        therm2 = stats.get('therm2')
+
+        if (hall1 == None) or (pump1 == None) or (therm1 == None) or (therm2 == None):
+            print('unable to get needed stats:', [hall1, pump1, therm1, therm2])
+            return False
 
         # System at rest:
         if context.phase == 'rest':
@@ -93,7 +103,7 @@ class HandOnOffTest(ProgramFunctionBase):
 
 
 
-class StatProcessors:
+class MessageProcessor:
 
     def __init__(
         self, 
@@ -101,15 +111,22 @@ class StatProcessors:
         programs: List[Program] or Program,
     ):
         self.deployment_ids = deployment_ids if isinstance(deployment_ids, list) else [deployment_ids]
-        self.programs = programs if isinstance(Program, list) else [programs]
+        self.programs = programs if isinstance(programs, list) else [programs]
 
 
-    def process(self, message: str, target: str, connection: ServerConnection ):
+    def process(self, connection: ServerConnection, event: Event ):
+        target = event.target
+        if target[0] == '#':
+            target = target[1:]
         results_map = {}
         for program in self.programs:
-            if target is None or target in program.deployment_ids:
-                results_map[program.__name__] = program.run(message, connection)
-            else: results_map[program.__name__] = [False]
+            program_name = program.active_function().__class__.__name__
+            if (self.deployment_ids) is None or (target in self.deployment_ids):
+                results_map[program_name] = program.run(connection, event)
+            else: results_map[program_name] = [False]
+        
+        print('finished running this StatProcessor\'s programs: {}'.format(list(map(lambda x: x.name, self.programs))))
+        print('  results_map:\n  {}\n---------\n'.format(results_map))
         return results_map
         
 

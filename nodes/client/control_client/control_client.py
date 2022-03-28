@@ -28,6 +28,7 @@ The known commands are:
 from datetime import datetime, timedelta
 import functools
 import itertools
+import json
 import os
 import sys
 import threading
@@ -42,6 +43,9 @@ from threading import Thread
 
 import more_itertools
 from apscheduler.schedulers.background import BackgroundScheduler
+
+from client.control_client.stats import MessageProcessor, Program
+from client.control_client.stats import HandOnOffTest
 
 
 scheduler = BackgroundScheduler()
@@ -62,6 +66,11 @@ class ControlBot(SingleServerIRCBot):
         self.nickname = nickname
         self.nodenicks = nodenicks
 
+        print('creating new message processor with nodenicks=', nodenicks)
+
+        pi_program = Program(HandOnOffTest)
+        self.processor = MessageProcessor(self.nodenicks, pi_program)
+
 
     def on_nicknameinuse(self, c, e):
         c.nick(c.get_nickname() + "_")
@@ -75,17 +84,23 @@ class ControlBot(SingleServerIRCBot):
     def on_privmsg(self, c, e):
         self.do_command(e, e.arguments[0])
 
-    def on_pubmsg(self, c, e):
-        print('received public message:', e.arguments)
-        if (e.target[1:] == self.nickname) or (e.target[1:] in self.nodenicks):
-            if(e.arguments[0].split('::')[0] == 'stats' or e.arguments[0].split('::')[0] == 'miner'):
-                self.process_stats(e.arguments[0].split('::')[1])
+    def on_pubmsg(self, connection, event):
+        print('received public message:', event.arguments)
+        if (event.target[1:] == self.nickname) or (event.target[1:] in self.nodenicks):
+            self.processor.process(connection, event)
+            #if(event.arguments[0].split('::')[0] == 'stats' or event.arguments[0].split('::')[0] == 'miner'):
+                #self.process_stats(event.arguments[0].split('::')[1])
 
         return
 
     def process_stats(self, stats):
         print('\nheard stats from IRC server:')
         print(stats)
+        try:
+            json.loads(stats)
+            print('was able to jsonify this message')
+        except:
+            print(' !! unable to parse jsons')
 
     def on_dccmsg(self, c, e):
         # non-chat DCC messages are raw bytes; decode as text

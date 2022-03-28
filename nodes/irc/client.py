@@ -75,7 +75,6 @@ from . import message
 from . import schedule
 
 log = logging.getLogger(__name__)
-log.setLevel(10)
 
 class IRCError(Exception):
     "An IRC exception"
@@ -1243,6 +1242,19 @@ class Event:
             "tags: {tags}"
         )
         return tmpl.format(**vars(self))
+
+    def message(self) -> str:
+        '''
+        the message associated with this event, which might be an empty string
+        if there is no message
+        '''
+        msg = self.arguments[::-1].pop()
+        if msg == None: return ''
+        try:
+            msg = str(msg)
+            return msg
+        except:
+            return ''
 
 
 def is_channel(string):
