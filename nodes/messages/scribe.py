@@ -58,8 +58,7 @@ def parseMessage(msg: string) -> bool or types.PiError :
                     400
                   )
               return executeChangeCommand(*args)
-    
-
+              
 
     if message_type == types.Messages.STATPULL.value:
         return True

@@ -1,17 +1,32 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod, abstractproperty
 import logging
+import os
+from posixpath import abspath, dirname, join
 from re import L
+from dotenv import load_dotenv
 from irc.client import ServerConnection, Event
 import sys
 from typing import List
 
+# Get the path to the directory this file is in
+BASEDIR = abspath(dirname(__file__))
+load_dotenv(join(BASEDIR, '../../../.base.env'))
+log_level = os.environ.get("LOG_LEVEL")
+log_type = os.environ.get("LOG_TYPE")
+
+if log_level not in list(map(lambda x: x[1], logging._levelToName.items())):
+    log_level = 'INFO'
+if log_type not in ['FULL', 'CLEAN']:
+    log_type = 'FULL'
+
 ch = logging.StreamHandler()
 log = logging.getLogger(__name__.split('.')[-1])
 
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p') if log_type == 'FULL' else logging.Formatter('%(name)s - %(message)s')
 ch.setFormatter(formatter)
 log.addHandler(ch)
+log.setLevel(log_level)
 logging.basicConfig(
     filename='control.log',
     encoding='utf-8', 
@@ -21,9 +36,8 @@ logging.basicConfig(
 class Program:
     active_function = None
 
-    def __init__(self, function: ProgramFunctionBase) -> None:
+    def __init__(self, function: ProgramFunctionBase, name='default') -> None:
 
-        self.call(function)
         self.context = {}
         self.return_history: List[str] = []
         self.event_history: List[Event] = []
@@ -32,22 +46,29 @@ class Program:
         self.active_function = function
         self.message = None
         self.deployment_ids = None
-        self.name = self.active_function().__class__.__name__
+        self.name = name or self.active_function().__class__.__name__
+        self.name = self.name.lower()
+        self.call(function)
+        log.debug('instantiating new Program "{}"'.format(self.name))
+        self.logger = log
 
 
     def call(self, function: ProgramFunctionBase):
-        print('should see a log by here...')
-        log.info("Program: calling next function".format({function().__class__.__name__}))
+        log.info('ControlBot "{}" calling function: {}'.format(self.name, {function().__class__.__name__}))
         self.active_function = function
         self.active_function.context = self
 
     def run(self, connection: ServerConnection, event: Event):
+        log.info('program "{}" is calling "{}" on a new message'.format(self.name, self.active_function().__class__.__name__))
         message = event.message()
+        log.debug('processor received message: {}'.format(message))
         self.message = message
         self.event = event
         self.connection = connection
         self.event_history.append(event)
+        log.debug('about to run {}'.format(self.active_function().__class__.__name__))
         ret = self.active_function.run(self)
+        log.debug('{} returned: {}'.format(self.active_function().__class__.__name__, ret))
         self.return_history.append(ret)
         return ret
 
@@ -57,16 +78,20 @@ class Program:
         retrieves the last 'n' events of type message 'type' with an optional filter for the sender nick/id
         of the last 'n' messages that are pulled 
         '''
-        # look at the most recent 30 messages
-        to_inspect = self.event_history if len(self.event_history) < 30 else self.event_history[:30]
+        # look at the most recent set number messages
+        lookback = 30
+        log.debug('about to pull the last {} messages of type "{}" from sender={}'.format(lookback, type, sender))
+        to_inspect = self.event_history if len(self.event_history) < lookback else self.event_history[:lookback]
         last: List[Event] = list(filter(
-            lambda x: 
+            lambda x:
                 (x.message().split('::')[::-1].pop() == type) and 
                 ( (not sender) or (x.source == sender) ),
             to_inspect
         ))
-        if len(last) < 1:
+        if len(last) < 1 and lookback > 1:
+            log.warning('no lookback history available for the "{}" program'.format(self.name))
             return None
+        log.debug('sucessfully pulled history for the "{}" program: {}'.format(self.name, last[0].source))
         return last[0]
 
 
@@ -89,6 +114,10 @@ class ProgramFunctionBase(ABC):
     @property
     def event(self) -> Event:
         return self._context.event
+
+    @property
+    def logger(self) -> Event:
+        return self._context.logger
 
     @property
     def deployment_ids(self) -> Event:

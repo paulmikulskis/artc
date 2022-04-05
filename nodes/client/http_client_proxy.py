@@ -190,13 +190,32 @@ def main():
         client.message('#main', 'cmd::'+command+'::'+param_string)
         return 'success'
 
+    @app.route("/control", methods=['POST'])
+    async def control():
+        # force=True will parse even without Application/Json Header
+        data = await request.get_json(force=True)
+        print('RECEIVED REQEST DATA:', data)
+        id = data['id']
+        command = data['command']
+        param_string = data['params']
+        params = param_string
+
+        # params are delineated by a comma, in case wish to do something with them:
+        if params is not None:
+            params = params.split(',')
+
+        print('sending to {}, {}'.format('#'+id, 'cmd::'+command+'::'+param_string))
+        client.message('#'+id, 'cmd::'+command+'::'+param_string)
+        # also send the message to #main for visibility via the system firehose
+        # client.message('#main', 'cmd::'+command+'::'+param_string)
+        return 'success'
+
 
     # start the server app and the IRC bot:
     try:
         loop = client.get_loop()
-        print('FIRST!')
         loop.create_task(app.run_task())
-        print('=== about to start client...')
+        print('=== about to start HTTP IRC client...')
         client.start()
         print('SECOND!')
     finally:

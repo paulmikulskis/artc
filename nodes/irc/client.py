@@ -1256,6 +1256,15 @@ class Event:
         except:
             return ''
 
+    def source_string(self) -> str:
+        '''
+        self.source contains an object like:
+            jumba_bot!jumba_bot@pool-108-26-189-147.bstnma.fios.verizon.net, target: #jumba_bot
+        
+        this function simply returns the source, which in the above example would be jumba_bot
+        '''
+        return self.source.split('!')[0]
+
 
 def is_channel(string):
     """Check if a string is a channel name.

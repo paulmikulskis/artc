@@ -29,6 +29,7 @@ from datetime import datetime, timedelta
 import functools
 import itertools
 import json
+import logging
 import os
 import sys
 import threading
@@ -41,19 +42,26 @@ from os.path import join, dirname, abspath
 from dotenv import load_dotenv
 from threading import Thread
 
-import more_itertools
-from apscheduler.schedulers.background import BackgroundScheduler
-
 from client.control_client.stats import MessageProcessor, Program
-from client.control_client.stats import HandOnOffTest
-
-
-scheduler = BackgroundScheduler()
-scheduler.start() 
+from client.control_client.programs.HandOnOffTest import HandOnOffTest
 
 # Get the path to the directory this file is in
 BASEDIR = abspath(dirname(__file__))
-load_dotenv(join(BASEDIR, '../.base.env'))
+load_dotenv(join(BASEDIR, '../../../.base.env'))
+log_level = os.environ.get("LOG_LEVEL")
+log_type = os.environ.get("LOG_TYPE")
+if log_type not in ['FULL', 'CLEAN']:
+    log_type = 'FULL'
+
+if log_level not in list(map(lambda x: x[1], logging._levelToName.items())):
+    log_level = 'INFO'
+
+ch = logging.StreamHandler()
+log = logging.getLogger(__name__.split('.')[-1])
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p') if log_type == 'FULL' else logging.Formatter('%(name)s - %(message)s')
+ch.setFormatter(formatter)
+log.addHandler(ch)
+log.setLevel(log_level)
 
 
 class ControlBot(SingleServerIRCBot):
@@ -65,11 +73,11 @@ class ControlBot(SingleServerIRCBot):
         self.password = password
         self.nickname = nickname
         self.nodenicks = nodenicks
+        log.info('ControlBot connecting to {}:{} on {}'.format(server, port, nodenicks.append('main')))
+        log.debug('creating new message processor with nodenicks={}'.format(nodenicks))
 
-        print('creating new message processor with nodenicks=', nodenicks)
-
-        pi_program = Program(HandOnOffTest)
-        self.processor = MessageProcessor(self.nodenicks, pi_program)
+        programs = [Program(HandOnOffTest)]
+        self.processor = MessageProcessor(self.nodenicks)
 
 
     def on_nicknameinuse(self, c, e):
@@ -78,36 +86,26 @@ class ControlBot(SingleServerIRCBot):
     def on_welcome(self, c, e):
         c.join(self.channel)
         for nick in self.nodenicks:
-            print('joining #'+nick)
+            log.info('joining channel #'+nick)
             c.join('#'+nick)
 
     def on_privmsg(self, c, e):
         self.do_command(e, e.arguments[0])
 
     def on_pubmsg(self, connection, event):
-        print('received public message:', event.arguments)
+        log.debug('received public message: {}'.format(event.arguments))
         if (event.target[1:] == self.nickname) or (event.target[1:] in self.nodenicks):
             self.processor.process(connection, event)
-            #if(event.arguments[0].split('::')[0] == 'stats' or event.arguments[0].split('::')[0] == 'miner'):
-                #self.process_stats(event.arguments[0].split('::')[1])
-
         return
 
-    def process_stats(self, stats):
-        print('\nheard stats from IRC server:')
-        print(stats)
-        try:
-            json.loads(stats)
-            print('was able to jsonify this message')
-        except:
-            print(' !! unable to parse jsons')
-
     def on_dccmsg(self, c, e):
+        return
         # non-chat DCC messages are raw bytes; decode as text
         text = e.arguments[0].decode('utf-8')
         c.privmsg("You said: " + text)
 
     def on_dccchat(self, c, e):
+        return
         if len(e.arguments) != 2:
             return
         args = e.arguments[1].split()
@@ -120,36 +118,10 @@ class ControlBot(SingleServerIRCBot):
             self.dcc_connect(address, port)
 
     def do_command(self, e, cmd):
-        nick = e.source.nick
-        c = self.connection
         if '::' in cmd:
-            print('received Pi command: {}'.format(cmd))
-
-        if cmd == "disconnect":
-            self.disconnect()
-        elif cmd == "die":
-            self.die()
-        elif cmd == "stats":
-            for chname, chobj in self.channels.items():
-                c.notice(nick, "--- Channel statistics ---")
-                c.notice(nick, "Channel: " + chname)
-                users = sorted(chobj.users())
-                c.notice(nick, "Users: " + ", ".join(users))
-                opers = sorted(chobj.opers())
-                c.notice(nick, "Opers: " + ", ".join(opers))
-                voiced = sorted(chobj.voiced())
-                c.notice(nick, "Voiced: " + ", ".join(voiced))
-        elif cmd == "dcc":
-            dcc = self.dcc_listen()
-            c.ctcp(
-                "DCC",
-                nick,
-                "CHAT chat %s %d"
-                % (ip_quad_to_numstr(dcc.localaddress), dcc.localport),
-            )
-        else:
-            c.notice(nick, "Not understood: " + cmd)
-
+            print('private command message received for {}'.format(self.nickname))
+        return
+       
 
 
 def statloop():
@@ -161,7 +133,15 @@ def main():
 
     if len(sys.argv) != 4:
         print("Usage: testbot <server[:port]> <channel> <nickname> <password>")
-        sys.exit(1)
+        server = os.environ.get("IRC_HOST")
+        nickname = os.environ.get("CONTROLLER_NICKNAME")
+        channel = '#main'
+        port = os.environ.get("IRC_PORT")
+
+        if None in [server, nickname, channel, port]:
+            print('!! Error: these variables were not found in base.env either, exiting...')
+            sys.exit(1)
+
 
     s = sys.argv[1].split(":", 1)
     server = s[0]
@@ -176,14 +156,24 @@ def main():
     channel = sys.argv[2]
     nickname = sys.argv[3]
 
-    nodenicks = ['pibot', 'jumba_bot']
-    server = 'sungbean.com'
-    nickname = 'pilisten'
+    nodenicks = os.environ.get("NODENICKS")
+    print('NODENICKS')
+    if nodenicks is None:
+        log.warn('NODENICKS not found in base.env, using defaults of [default, jumba_bot]')
+        nodenicks = ['default', 'jumba_bot']
+    else:
+        nodenicks = nodenicks.split(',')
+    server = os.environ.get("IRC_HOST")
+    nickname = os.environ.get("CONTROLLER_NICKNAME")
+    # channel only serves as a default channel that the control bot joins
     channel = '#main'
-    port = 6667
-    password = '1234count'
-    nick = 'control_bot_server'
-
+    port = os.environ.get("IRC_PORT")
+    try:
+        port = int(port)
+    except:
+        log.error('PORT found in base.env, but cannot be converted to a needed integer')
+        sys.exit(1)
+    password = os.environ.get("COMMUNICATIONS_MASTER_PASSWORD")
     bot = ControlBot(channel, nickname, server, nodenicks, port)
     bot.reactor.scheduler.execute_every(bot.stat_interval, functools.partial(statloop))
     bot.start()
