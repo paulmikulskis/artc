@@ -50,6 +50,9 @@ class SystemMiners(Device):
             self.stop_mining(hostnames)
         if command == 'start' or command == 'start_mining' or command == 'true' or command == True or command == 1:
             self.start_mining(hostnames)
+    
+    def get_temps(self):
+        return self.client.get_tempterature_stats()
 
 
 '''

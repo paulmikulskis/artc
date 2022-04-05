@@ -390,6 +390,16 @@ class BraiinsOsClient:
             for resp in temps 
         }, None
 
+
+    def get_tempterature_stats(self) -> dict[str, int]:
+        templist = self.get_temperature_list()
+        temps = {'board_'+t[2]: t[0] for t in templist}
+        temps2 = {'chip_'+t[2]: t[1] for t in templist}
+        temps = {**temps, **temps2}
+        print('TEMPS')
+        print(temps)
+        return temps
+
     
     def get_details(self, hosts: List[str] = None) -> List[MinerAPIResponse]:
         '''

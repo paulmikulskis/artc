@@ -150,6 +150,11 @@ to the server and InfluxDB
 def statloop(influx_stat_writer: InfluxStatWriter, braiins: BraiinsOsClient, irc_connection: ServerConnection):
     print('\nsending stats...')
     stats = {k: v() for k, v in stat_map.items()}
+    for k, v in stats.items():
+        if isinstance(v, dict):
+            val = v
+            del stats[k]
+            stats = {**stats, **val}
     influx_stat_writer.write_dict('test', stats)    
     irc_connection.privmsg('#'+irc_connection.nickname, 'stats::'+json.dumps(stats))
     is_mining = braiins.is_mining()

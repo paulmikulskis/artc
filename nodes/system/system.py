@@ -37,5 +37,6 @@ stat_map = {
     'pump_oil': device_map['pump_oil'].get_state,
     'pump_water': device_map['pump_water'].get_state,
     'therm_oil': device_map['therm_oil'].read_farenheight,
-    'therm_water': device_map['therm_water'].read_farenheight
+    'therm_water': device_map['therm_water'].read_farenheight,
+    'miners': device_map['miners'].get_temps
 }
