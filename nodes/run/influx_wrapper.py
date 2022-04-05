@@ -14,13 +14,14 @@ class InfluxStatWriter:
     print('token=', os.environ.get("INFLUX_NODE_KEY"))
     print('ord=',os.environ.get("INFLUX_ORG"))
 
-    def __init__(self, host, port=8086):
+    def __init__(self, host, port=8086, https=True):
         print('host=', host)
         self.host = host
         self.port = port
         self.org = os.environ.get("INFLUX_ORG")
+        preface = 'https://' if https else 'http://'
         self.client = InfluxDBClient(
-            url='http://{}:{}'.format(self.host, self.port), 
+            url='{}{}:{}'.format(preface, self.host, self.port), 
             token=os.environ.get("INFLUX_NODE_KEY"),
             org=self.org
           )
