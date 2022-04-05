@@ -14,10 +14,11 @@ class InfluxStatWriter:
     print('token=', os.environ.get("INFLUX_NODE_KEY"))
     print('ord=',os.environ.get("INFLUX_ORG"))
 
-    def __init__(self, host, port=8086, https=True):
+    def __init__(self, host, port=8086, bucket='default', https=True):
         print('host=', host)
         self.host = host
         self.port = port
+        self.bucket = bucket
         self.org = os.environ.get("INFLUX_ORG")
         preface = 'https://' if https else 'http://'
         self.client = InfluxDBClient(
@@ -44,6 +45,6 @@ class InfluxStatWriter:
             "tags": {"deployment": self.deployment_id},
             "fields": datapoints
         }
-        self.write_api.write("my-bucket", self.org, data_dict)
+        self.write_api.write(self.bucket, self.org, data_dict)
 
 
