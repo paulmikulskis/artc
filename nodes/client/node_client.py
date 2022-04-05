@@ -189,7 +189,7 @@ def main():
     braiins = BraiinsOsClient(os.environ.get("MINING_HOST"), password=os.environ.get("MINING_PASSWORD"))
     bot = PiBot(channel, nickname, server, port)
 
-    device_map['flow1'].listen()
+    # device_map['flow1'].listen()
     bot.reactor.scheduler.execute_every(bot.stat_interval, functools.partial(statloop, influx_stat_writer, braiins, bot.connection))
     bot.start()
 
