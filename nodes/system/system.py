@@ -24,16 +24,18 @@ THERMISTOR_ADDRESSES = {
 # each device should have a name, and be mapped to an object
 # that extends device.Device
 device_map: Dict[str, Device] = {
-    'pump1': RelaySwitch('pump1', False, DigitalInOut(board.D21)),
-    'flow1': HallEffectFlowSensor('flow1', 12),
-    'therm1': OneWireThermister('therm1', 1, THERMISTOR_ADDRESSES),
+    'pump_oil': RelaySwitch('pump_oil', False, DigitalInOut(board.D21)),
+    'pump_water': RelaySwitch('pump_water', False, DigitalInOut(board.D22)),
+    'therm_oil': OneWireThermister('therm_oil', 1, THERMISTOR_ADDRESSES),
+    'therm_water': OneWireThermister('therm_water', 2, THERMISTOR_ADDRESSES),
     'miners': SystemMiners('antminer')
 }
 
 # list out all the stats to be collected and shipped
 # off to InfluxDB
 stat_map = {
-    'hall1': device_map['flow1'].get_rate,
-    'pump1': device_map['pump1'].get_state,
-    'therm1': device_map['therm1'].read_farenheight
+    'pump_oil': device_map['pump_oil'].get_state,
+    'pump_water': device_map['pump_water'].get_state,
+    'therm_oil': device_map['therm_oil'].read_farenheight,
+    'therm_water': device_map['therm_water'].read_farenheight
 }
