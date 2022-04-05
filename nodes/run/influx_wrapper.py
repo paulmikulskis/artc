@@ -21,7 +21,7 @@ class InfluxStatWriter:
         self.org = os.environ.get("INFLUX_ORG")
         preface = 'https://' if https else 'http://'
         self.client = InfluxDBClient(
-            url='{}{}:{}'.format(preface, self.host, self.port), 
+            url='{}{}'.format(preface, self.host, self.port), 
             token=os.environ.get("INFLUX_NODE_KEY"),
             org=self.org
           )
