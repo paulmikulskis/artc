@@ -401,8 +401,8 @@ class BraiinsOsClient:
         print(templist)
 
         keys = list(templist.keys())
-        temps = {'c'+keys.index(host)+'_board_'+d[2]: d[0] for host, data in templist.items() for d in data }
-        temps2 = {'c'+keys.index(host)+'_chip_'+d[2]: d[1] for host, data in templist.items() for d in data }
+        temps = {'c'+str(keys.index(host))+'_board_'+str(d[2]): d[0] for host, data in templist.items() for d in data }
+        temps2 = {'c'+str(keys.index(host))+'_chip_'+str(d[2]): d[1] for host, data in templist.items() for d in data }
         temps = {**temps, **temps2}
         print('TEMPS')
         print(temps)
