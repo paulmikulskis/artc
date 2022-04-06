@@ -389,7 +389,7 @@ class BraiinsOsClient:
 
         return {
            resp[0]: [
-              (d['Board'], f(float(d['Chip'])), f(float(d['ID'])))
+              (d['Board'], d['Chip'], d['ID'])
                 for resp in temps
                 for d in resp[1].data
             ] 
