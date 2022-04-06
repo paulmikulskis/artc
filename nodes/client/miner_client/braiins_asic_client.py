@@ -15,6 +15,12 @@ import paramiko
 
 log = logging.getLogger(__name__)
 
+def f(n, roundn=3) -> float:
+    '''
+    Converts celcius to Farenheight
+    '''
+    return round(((9/5) * n) + 32, roundn)
+
 class MinerAPIResponseType(Enum):
 
     CANNOT_CONNECT = 'CANNOT_CONNECT'
@@ -383,7 +389,7 @@ class BraiinsOsClient:
 
         return {
            resp[0]: [
-              (d['Board'], d['Chip'], d['ID'])
+              (d['Board'], f(float(d['Chip'])), f(float(d['ID'])))
                 for resp in temps
                 for d in resp[1].data
             ] 
@@ -397,14 +403,10 @@ class BraiinsOsClient:
             err = True
         else:
             templist = templist[0]
-        print('TEMP LLLLLLLLIST')
-        print(templist)
 
         keys = list(templist.keys())
-        temps = {'c'+str(keys.index(host))+'_board_'+str(d[2]): d[0] for host, data in templist.items() for d in data }
+        temps = {'c'+str(keys.index(host))+'_board_'+str(d[2]): f(d[0]) for host, data in templist.items() for d in data }
         # temps2 = {'c'+str(keys.index(host))+'_chip_'+str(d[2]): d[1] for host, data in templist.items() for d in data }
-        print('TEMPS')
-        print(temps)
         return temps
 
     
