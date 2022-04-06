@@ -42,7 +42,7 @@ from dotenv import load_dotenv
 from client.miner_client.braiins_asic_client import BraiinsOsClient
 
 
-from system.system import stat_map
+from system.system import stat_map, device_map
 
 # Get the path to the directory this file is in
 BASEDIR = abspath(dirname(__file__))
@@ -150,12 +150,9 @@ to the server and InfluxDB
 def statloop(influx_stat_writer: InfluxStatWriter, braiins: BraiinsOsClient, irc_connection: ServerConnection):
     print('\nsending stats...')
     stats = {k: v() for k, v in stat_map.items()}
-    # for k, v in stats.items():
-    #     if isinstance(v, dict):
-    #         val = v
-    #         del stats[k]
-    #         stats = {**stats, **val}
-    influx_stat_writer.write_dict('test', stats)    
+    miner_temps = device_map['miners'].get_temps()
+    influx_stat_writer.write_dict('main_stats', stats)
+    influx_stat_writer.write_dict('miner_temps', miner_temps) 
     irc_connection.privmsg('#'+irc_connection.nickname, 'stats::'+json.dumps(stats))
     is_mining = braiins.is_mining()
     temps = braiins.get_temperature_list()
