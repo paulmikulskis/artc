@@ -393,10 +393,16 @@ class BraiinsOsClient:
 
     def get_tempterature_stats(self) -> dict[str, int]:
         templist = self.get_temperature_list()
+        if templist[1] is not None:
+            err = True
+        else:
+            templist = templist[0]
         print('TEMP LLLLLLLLIST')
         print(templist)
-        temps = {'board_'+t[2]: t[0] for t in templist}
-        temps2 = {'chip_'+t[2]: t[1] for t in templist}
+
+        keys = list(templist.keys())
+        temps = {'c'+keys.index(host)+'_board_'+d[2]: d[0] for host, data in templist.items() for d in data }
+        temps2 = {'c'+keys.index(host)+'_chip_'+d[2]: d[1] for host, data in templist.items() for d in data }
         temps = {**temps, **temps2}
         print('TEMPS')
         print(temps)
