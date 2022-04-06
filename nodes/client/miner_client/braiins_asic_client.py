@@ -19,7 +19,10 @@ def f(n, roundn=3) -> float:
     '''
     Converts celcius to Farenheight
     '''
-    return round(((9/5) * n) + 32, roundn)
+    return round(
+        ((9/5) * n) + 32,
+        roundn
+        )
 
 class MinerAPIResponseType(Enum):
 
