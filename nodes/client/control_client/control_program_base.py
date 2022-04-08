@@ -36,9 +36,9 @@ logging.basicConfig(
 class Program:
     active_function = None
 
-    def __init__(self, function: ProgramFunctionBase, name='default') -> None:
+    def __init__(self, function: ProgramFunctionBase) -> None:
 
-        self.context = {}
+        self.context = {'phase': 'rest'}
         self.return_history: List[str] = []
         self.event_history: List[Event] = []
         self.connection: ServerConnection = None
@@ -46,7 +46,7 @@ class Program:
         self.active_function = function
         self.message = None
         self.deployment_ids = None
-        self.name = name or self.active_function().__class__.__name__
+        self.name = self.active_function.__class__.__name__
         self.name = self.name.lower()
         self.call(function)
         log.debug('instantiating new Program "{}"'.format(self.name))
@@ -54,21 +54,21 @@ class Program:
 
 
     def call(self, function: ProgramFunctionBase):
-        log.info('ControlBot "{}" calling function: {}'.format(self.name, {function().__class__.__name__}))
+        log.info('ControlBot "{}" calling function: {}'.format(self.name, {function.__class__.__name__}))
         self.active_function = function
         self.active_function.context = self
 
     def run(self, connection: ServerConnection, event: Event):
-        log.info('program "{}" is calling "{}" on a new message'.format(self.name, self.active_function().__class__.__name__))
+        log.info('program "{}" is calling "{}" on a new message'.format(self.name, self.active_function.__class__.__name__))
         message = event.message()
         log.debug('processor received message: {}'.format(message))
         self.message = message
         self.event = event
         self.connection = connection
         self.event_history.append(event)
-        log.debug('about to run {}'.format(self.active_function().__class__.__name__))
-        ret = self.active_function.run(self)
-        log.debug('{} returned: {}'.format(self.active_function().__class__.__name__, ret))
+        log.debug('about to run {}'.format(self.active_function.__class__.__name__))
+        ret = self.active_function.run()
+        log.debug('{} returned: {}'.format(self.active_function.__class__.__name__, ret))
         self.return_history.append(ret)
         return ret
 
@@ -82,6 +82,7 @@ class Program:
         lookback = 30
         log.debug('about to pull the last {} messages of type "{}" from sender={}'.format(lookback, type, sender))
         to_inspect = self.event_history if len(self.event_history) < lookback else self.event_history[:lookback]
+        print('EVENT HISTORY:', list(map(lambda x: x.message() ,self.event_history)))
         last: List[Event] = list(filter(
             lambda x:
                 (x.message().split('::')[::-1].pop() == type) and 
@@ -91,8 +92,8 @@ class Program:
         if len(last) < 1 and lookback > 1:
             log.warning('no lookback history available for the "{}" program'.format(self.name))
             return None
-        log.debug('sucessfully pulled history for the "{}" program: {}'.format(self.name, last[0].source))
-        return last[0]
+        log.debug('sucessfully pulled history for the "{}" program'.format(self.name))
+        return last[-1]
 
 
     def target(self):
@@ -135,6 +136,9 @@ class ProgramFunctionBase(ABC):
     def return_history(self) -> str:
         return self._context.return_history
 
+    def last_events(self, type, sender=None, n=1):
+            return self._context.last_events(type, sender, n)
+
     @context.setter
     def context(self, context: Program) -> None:
         self._context = context
@@ -142,23 +146,3 @@ class ProgramFunctionBase(ABC):
     @abstractmethod
     def run(self) -> None:
         pass
-
-
-
-class TestFunction(ProgramFunctionBase):
-
-    def run(self) -> bool:
-        message = self.message
-        message_history = self.message_history
-        return_history = self.return_history
-        connection = self.connection
-
-        if len(return_history) > 3:
-            print('had more than 3 entries!', message_history)
-            print('clearing memory...')
-            return_history = []
-
-        return message
-        
-
-

@@ -7,7 +7,16 @@ from posixpath import abspath, dirname, join
 from typing import Dict, List
 from dotenv import load_dotenv
 from irc.client import ServerConnection, Event
-from client.control_client.control_program_base import Program, ProgramFunctionBase
+from client.control_client.control_program_base import Program
+
+# import and list all programs here:
+from client.control_client.programs.HandOnOffTest import HandOnOffTest
+from client.control_client.programs.JacuzziTest import JacuzziTest
+
+ALL_PROGRAMS = [
+    HandOnOffTest,
+    JacuzziTest
+]
 
 
 class MessageProcessor:
@@ -68,14 +77,17 @@ class MessageProcessor:
 
         command = parts[1]
         args = parts[2].split(',')
-        args: List[Program] = list(filter(lambda x: x.name in args, self.programs))
+        # args = [ProgramName, param1, param2]
+        program_name = args[0]
+        program = list(filter(lambda x: x().__class__.__name__ == program_name, ALL_PROGRAMS[:])).pop()
+        if not program: return [False]
 
         if command == 'start':
             connection.privmsg(event.target, 'starting programs "{}"'.format(args))
-            return [self.start_processing(arg) for arg in args]
+            return self.start_processing(program(*args[1:]))
         if command == 'stop':
             connection.privmsg(event.target, 'stopping programs "{}"'.format(args))
-            return [self.stop_processing(arg.name) for arg in args]
+            return self.stop_processing(program_name)
         
         self.logger.error('command "{}" not implemented yet...  arguments: {}'.format(command, args))
         return [False]
@@ -83,11 +95,13 @@ class MessageProcessor:
 
     def process_node_message(self, connection: ServerConnection, event: Event):
         target = event.target
+        if len(target) < 2:
+            return {}
         if target[0] == '#':
             target = target[1:]
         results_map = {}
         for program in self.programs:
-            program_name = program.active_function().__class__.__name__
+            program_name = program.active_function.__class__.__name__
             if ((self.deployment_ids) is None ) or (target in self.deployment_ids):
                 results_map[program_name] = program.run(connection, event)
             else: results_map[program_name] = [False]
@@ -104,22 +118,21 @@ class MessageProcessor:
         name = program.name
         if name not in list(map(lambda x: x.name, self.programs)):
             self.programs.append(program)
-            return True
         else:
-            self.logger.error('cannot add program {} to this MessageProcessor, name taken.'.format(name))
-            return False
+            self.logger.error('adding program {} to this MessageProcessor, instantiating a NEW one (name found)'.format(name))
+            self.programs = list(filter(lambda x: x.name != name, self.programs))
+            self.programs.append(program)
+        
+        return True
 
 
     def stop_processing(self, name: str):
         '''
         Tells this MessageProcessor to stop running the program with name 'name'
         '''
-        try:
-            index = list(map(lambda x: x.name, self.programs)).index(name)
-            return True
-        except ValueError:
-            self.logger.error('cannot remove program {} to this MessageProcessor, name not found.'.format(name))
-            return False
+        self.programs = list(filter(lambda x: x.name != name, self.programs))
+        return True
+
 
         
 

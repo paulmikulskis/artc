@@ -44,6 +44,8 @@ from threading import Thread
 
 from client.control_client.stats import MessageProcessor, Program
 from client.control_client.programs.HandOnOffTest import HandOnOffTest
+from client.control_client.programs.JacuzziTest import JacuzziTest
+
 
 # Get the path to the directory this file is in
 BASEDIR = abspath(dirname(__file__))
@@ -76,8 +78,10 @@ class ControlBot(SingleServerIRCBot):
         log.info('ControlBot connecting to {}:{} on {}'.format(server, port, nodenicks.append('main')))
         log.debug('creating new message processor with nodenicks={}'.format(nodenicks))
 
-        programs = [Program(HandOnOffTest)]
-        self.processor = MessageProcessor(self.nodenicks)
+        programs = [
+            Program(JacuzziTest(target_temp=98)),
+        ]
+        self.processor = MessageProcessor(self.nodenicks, programs)
 
 
     def on_nicknameinuse(self, c, e):

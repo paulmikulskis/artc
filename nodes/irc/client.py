@@ -1263,7 +1263,7 @@ class Event:
         
         this function simply returns the source, which in the above example would be jumba_bot
         '''
-        return self.source.split('!')[0]
+        return self.target.split('!')[0]
 
 
 def is_channel(string):
