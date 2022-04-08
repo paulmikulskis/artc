@@ -11,7 +11,11 @@ FIELD_SEPRATATOR = '::'
 class JacuzziTest(ProgramFunctionBase):
 
     def __init__(self, target_temp=104):
-        self.target_temp = target_temp
+        try:
+            self.target_temp = float(target_temp)
+        except:
+            print('non float parsable value used to instantiatue JacuzziTest program!')
+            return False
 
 
     def set_target_temp(self, target_temp: float or int) -> bool:
