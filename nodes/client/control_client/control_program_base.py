@@ -105,6 +105,10 @@ class Program:
 class ProgramFunctionBase(ABC):
 
     @property
+    def name(self) -> str:
+        return self._context.name
+    
+    @property
     def context(self) -> Program:
         return self._context
 

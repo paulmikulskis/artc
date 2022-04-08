@@ -53,10 +53,13 @@ class MessageProcessor:
 
 
     def process(self, connection: ServerConnection, event: Event ):
-        if (event.target == '#control') or (event.target == '#control_bot') or (event.target[1:] == connection.nickname):
+        if (event.message().split('::')[::-1].pop() == 'control') or (event.message().split('::')[::-1].pop() == 'control_bot'):
+            print('PLACE 1')
             return self.intake_command(connection, event)
         else:
+            print('PLACE 2')
             return self.process_node_message(connection, event)
+            
  
 
     def intake_command(self, connection: ServerConnection, event: Event):
@@ -67,7 +70,7 @@ class MessageProcessor:
             return False
         switch = parts[0]
         # only accepting 'cmd' messages at this time
-        if switch != 'cmd':
+        if switch != 'control':
             self.logger.error('unable to intake_command: "{}"'.format(message))
             return [False]
 
@@ -79,12 +82,15 @@ class MessageProcessor:
         args = parts[2].split(',')
         # args = [ProgramName, param1, param2]
         program_name = args[0]
-        program = list(filter(lambda x: x().__class__.__name__ == program_name, ALL_PROGRAMS[:])).pop()
+        program = list(filter(lambda x: str(x().__class__.__name__).lower() == program_name, ALL_PROGRAMS)).pop()
         if not program: return [False]
 
         if command == 'start':
             connection.privmsg(event.target, 'starting programs "{}"'.format(args))
-            return self.start_processing(program(*args[1:]))
+            print('ARGS:', args[1:])
+            new_program = Program(program(*args[1:]))
+            print('NEW PROGRAM:', new_program)
+            return self.start_processing(new_program)
         if command == 'stop':
             connection.privmsg(event.target, 'stopping programs "{}"'.format(args))
             return self.stop_processing(program_name)
