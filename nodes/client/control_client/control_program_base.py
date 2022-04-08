@@ -21,7 +21,8 @@ if log_type not in ['FULL', 'CLEAN']:
     log_type = 'FULL'
 
 ch = logging.StreamHandler()
-log = logging.getLogger(__name__.split('.')[-1])
+# log = logging.getLogger(__name__.split('.')[-1])
+log = logging.getLogger('runtime')
 
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p') if log_type == 'FULL' else logging.Formatter('%(name)s - %(message)s')
 ch.setFormatter(formatter)
@@ -80,9 +81,7 @@ class Program:
         '''
         # look at the most recent set number messages
         lookback = 30
-        log.debug('about to pull the last {} messages of type "{}" from sender={}'.format(lookback, type, sender))
         to_inspect = self.event_history if len(self.event_history) < lookback else self.event_history[:lookback]
-        print('EVENT HISTORY:', list(map(lambda x: x.message() ,self.event_history)))
         last: List[Event] = list(filter(
             lambda x:
                 (x.message().split('::')[::-1].pop() == type) and 
@@ -92,7 +91,7 @@ class Program:
         if len(last) < 1 and lookback > 1:
             log.warning('no lookback history available for the "{}" program'.format(self.name))
             return None
-        log.debug('sucessfully pulled history for the "{}" program'.format(self.name))
+        log.debug('sucessfully pulled "{}" history for the "{}" program, msg: "{}"'.format(type, self.name, last[-1].message()))
         return last[-1]
 
 
@@ -142,6 +141,10 @@ class ProgramFunctionBase(ABC):
 
     def last_events(self, type, sender=None, n=1):
             return self._context.last_events(type, sender, n)
+
+    def set_phase_to(self, phase):
+        self.context.logger.info('changing phase to "{}"'.format(phase))
+        self.context.context['phase'] = phase
 
     @context.setter
     def context(self, context: Program) -> None:

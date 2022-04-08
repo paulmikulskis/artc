@@ -57,7 +57,6 @@ class JacuzziTest(ProgramFunctionBase):
         stats = stats[1]
         miner = miner[1]
         if not isinstance(stats, dict):
-            print('stats type: {}, value: {}'.format(type(stats), stats))
             try:
                 stats = json.loads(stats)
             except:
@@ -92,36 +91,33 @@ class JacuzziTest(ProgramFunctionBase):
 
         pump_oil = bool(pump_oil)
         pump_water = bool(pump_water)
-        print('stats:', stats)
-        print('pump_oil:', pump_oil)
-        print('pump_water:', pump_water)
         therm_oil = float(therm_oil)
         therm_water = float(therm_water)
 
 
         if context['phase'] == 'rest':
             if therm_water < self.target_temp:
-                if not pump_oil:    connection.privmsg(event.source_string(), 'cmd::chng::pump_oil,on')
-                if not pump_water:  connection.privmsg(event.source_string(), 'cmd::chng::pump_water,on')
-                if not pump_oil and not pump_water: connection.privmsg(event.source_string(), 'func::miner::start')
-                context['phase'] = 'heating'
+                if not pump_oil:    connection.privmsg(event.target_string(), 'cmd::chng::pump_oil,on')
+                if not pump_water:  connection.privmsg(event.target_string(), 'cmd::chng::pump_water,on')
+                if not pump_oil and not pump_water: connection.privmsg(event.target_string(), 'func::miner::start')
+                self.set_phase_to('heating')
                 return True
             if therm_water > self.target_temp:
-                if pump_oil:    connection.privmsg(event.source_string(), 'cmd::chng::pump_oil,off')
-                if pump_water:  connection.privmsg(event.source_string(), 'cmd::chng::pump_water,off')
-                #if not pump_oil and not pump_water: connection.privmsg(event.source_string(), 'func::miner::stop')
+                if pump_oil:    connection.privmsg(event.target_string(), 'cmd::chng::pump_oil,off')
+                if pump_water:  connection.privmsg(event.target_string(), 'cmd::chng::pump_water,off')
+                #if not pump_oil and not pump_water: connection.privmsg(event.target_string(), 'func::miner::stop')
                 return True
             
         if context['phase'] == 'heating':
             if therm_water < self.target_temp:
-                if not pump_oil:    connection.privmsg(event.source_string(), 'cmd::chng::pump_oil,on')
-                if not pump_water:  connection.privmsg(event.source_string(), 'cmd::chng::pump_water,on')
-                if not pump_oil and not pump_water: connection.privmsg(event.source_string(), 'func::miner::start')
+                if not pump_oil:    connection.privmsg(event.target_string(), 'cmd::chng::pump_oil,on')
+                if not pump_water:  connection.privmsg(event.target_string(), 'cmd::chng::pump_water,on')
+                if not pump_oil and not pump_water: connection.privmsg(event.target_string(), 'func::miner::start')
                 return True
             if therm_water > self.target_temp:
-                if pump_oil:    connection.privmsg(event.source_string(), 'cmd::chng::pump_oil,off')
-                if pump_water:  connection.privmsg(event.source_string(), 'cmd::chng::pump_water,off')
-                connection.privmsg(event.source_string(), 'func::miner::stop')
-                context['phase'] = 'rest'
+                if pump_oil:    connection.privmsg(event.target_string(), 'cmd::chng::pump_oil,off')
+                if pump_water:  connection.privmsg(event.target_string(), 'cmd::chng::pump_water,off')
+                connection.privmsg(event.target_string(), 'func::miner::stop')
+                self.set_phase_to('rest')
                 return True
             

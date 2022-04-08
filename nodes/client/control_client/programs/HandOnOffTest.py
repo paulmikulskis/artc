@@ -89,18 +89,18 @@ class HandOnOffTest(ProgramFunctionBase):
         if context['phase'] == 'rest':
             if float(therm1) > 75.0:
                 log.info('')
-                connection.privmsg(event.source_string(), 'func::miner::start')
+                connection.privmsg(event.target_string(), 'func::miner::start')
                 context['phase'] = 'mine'
                 
         # System detects need to produce heat:
         if context['phase'] == 'mine':
             if float(therm2) > 75.0:
-                connection.privmsg(event.source_string(), 'func::miner::stop')
-                connection.privmsg(event.source_string(), 'cmd::chng::pump1,on')
+                connection.privmsg(event.target_string(), 'func::miner::stop')
+                connection.privmsg(event.target_string(), 'cmd::chng::pump1,on')
                 context['phase'] = 'pump'
 
         # System pumps new heat until original condition ceases:
         if context['phase'] == 'pump':
             if float(therm1) < 75:
-                connection.privmsg(event.source_string(), 'cmd::chng::pump1,off')
+                connection.privmsg(event.target_string(), 'cmd::chng::pump1,off')
                 context['phase'] = 'rest'

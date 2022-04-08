@@ -43,7 +43,8 @@ class MessageProcessor:
 
 
         ch = logging.StreamHandler()
-        log = logging.getLogger(__name__.split('.')[-1])
+        # log = logging.getLogger(__name__.split('.')[-1])
+        log = logging.getLogger('control_runner')
 
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p') if log_type == 'FULL' else logging.Formatter('%(name)s - %(message)s')
         ch.setFormatter(formatter)
@@ -54,10 +55,13 @@ class MessageProcessor:
 
     def process(self, connection: ServerConnection, event: Event ):
         if (event.message().split('::')[::-1].pop() == 'control') or (event.message().split('::')[::-1].pop() == 'control_bot'):
-            print('PLACE 1')
+            self.logger.info('intaking command message from {}'.format(event.source_string()))
             return self.intake_command(connection, event)
         else:
-            print('PLACE 2')
+            if len(self.programs) == 0:
+                self.logger.info('skip processing, no programs configured!')
+                return {}
+            self.logger.info('processing message from {}'.format(event.source_string()))
             return self.process_node_message(connection, event)
             
  
@@ -87,9 +91,7 @@ class MessageProcessor:
 
         if command == 'start':
             connection.privmsg(event.target, 'starting programs "{}"'.format(args))
-            print('ARGS:', args[1:])
             new_program = Program(program(*args[1:]))
-            print('NEW PROGRAM:', new_program)
             return self.start_processing(new_program)
         if command == 'stop':
             connection.privmsg(event.target, 'stopping programs "{}"'.format(args))
