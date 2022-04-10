@@ -78,6 +78,8 @@ class PiBot(SingleServerIRCBot):
         # only used more-or-less as a global firehose log of the system
         if e.target == '#main':
             return 
+        print('\nreceived public message:', e.arguments)
+        self.do_command(e, e.arguments[0])
 
         print('\nreceived message from controller:\n    {}'.format(the_message))
         
