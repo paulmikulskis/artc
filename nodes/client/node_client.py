@@ -71,6 +71,7 @@ class PiBot(SingleServerIRCBot):
         self.do_command(e, e.arguments[0])
 
     def on_pubmsg(self, c, e):
+        print('\nreceived public message')
         the_message = e.arguments[0]
         #command = the_message.split(':')[0]
 
