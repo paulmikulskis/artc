@@ -68,11 +68,11 @@ class PiBot(SingleServerIRCBot):
         print('joined the "{}" channel'.format('#'+self.nickname))
 
     def on_privmsg(self, c, e):
-        print('\nreceived private message:', e.arguments)
+        print('!!!! received private message:', e.arguments)
         self.do_command(e, e.arguments[0])
 
     def on_pubmsg(self, c, e):
-        print('\nreceived public message')
+        print('!!!! received public message', e.arguments)
         the_message = e.arguments[0]
         #command = the_message.split(':')[0]
 
