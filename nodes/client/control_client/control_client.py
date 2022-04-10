@@ -45,6 +45,7 @@ from threading import Thread
 from client.control_client.stats import MessageProcessor, Program
 from client.control_client.programs.HandOnOffTest import HandOnOffTest
 from client.control_client.programs.JacuzziTest import JacuzziTest
+from run.influx_wrapper import InfluxStatWriter
 
 
 # Get the path to the directory this file is in
@@ -128,8 +129,15 @@ class ControlBot(SingleServerIRCBot):
        
 
 
-def statloop():
-    pass
+def statloop(influx_stat_writer: InfluxStatWriter, controller: ControlBot):
+    controller_dict = {
+            'programs': json.dumps({prog.active_function.name: {**prog.active_function.args, 'phase': prog.context['phase']} for prog in controller.processor.programs})
+        }
+    influx_stat_writer.write_dict(
+        'controller',
+        controller_dict
+        )
+    controller.processor.logger.info('sending state to influx: {}'.format(str(controller_dict)[1:-1]))
 
 
 def main():
@@ -164,7 +172,7 @@ def main():
     print('NODENICKS')
     if nodenicks is None:
         log.warn('NODENICKS not found in base.env, using defaults of [default, jumba_bot]')
-        nodenicks = ['default', 'jumba_bot']
+        nodenicks = ['jontest', 'jumba_bot']
     else:
         nodenicks = nodenicks.split(',')
     server = os.environ.get("IRC_HOST")
@@ -179,7 +187,8 @@ def main():
         sys.exit(1)
     password = os.environ.get("COMMUNICATIONS_MASTER_PASSWORD")
     bot = ControlBot(channel, nickname, server, nodenicks, port)
-    bot.reactor.scheduler.execute_every(bot.stat_interval, functools.partial(statloop))
+    influx_stat_writer = InfluxStatWriter(os.environ.get("INFLUX_HOST"), deployment_ids=nodenicks)
+    bot.reactor.scheduler.execute_every(bot.stat_interval, functools.partial(statloop, influx_stat_writer, bot))
     bot.start()
 
 

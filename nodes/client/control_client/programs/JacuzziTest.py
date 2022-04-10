@@ -14,12 +14,18 @@ class JacuzziTest(ProgramFunctionBase):
         try:
             self.target_temp = float(target_temp)
         except:
-            print('non float parsable value used to instantiatue JacuzziTest program!')
-            return False
+            print('non float parsable value used to instantiatue JacuzziTest program!  Setting to 0')
+            self.target_temp = 0.0
+
+        # optionally setting this Program's current arguments will make these visible to Influx
+        self.arguments = {
+           'target_temp': self.target_temp
+        }
 
 
     def set_target_temp(self, target_temp: float or int) -> bool:
         self.target_temp = target_temp
+        self.arguments['target_temp'] = target_temp
         return True
 
 

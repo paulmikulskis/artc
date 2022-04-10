@@ -404,6 +404,7 @@ class BraiinsOsClient:
         templist = self.get_temperature_list()
         if templist[1] is not None:
             err = True
+            return {}
         else:
             templist = templist[0]
 

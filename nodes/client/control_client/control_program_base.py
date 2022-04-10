@@ -136,6 +136,11 @@ class ProgramFunctionBase(ABC):
         return self._context.connection
 
     @property
+    def args(self) -> dict:
+        if self.arguments: return self.arguments
+        return {}
+
+    @property
     def return_history(self) -> str:
         return self._context.return_history
 

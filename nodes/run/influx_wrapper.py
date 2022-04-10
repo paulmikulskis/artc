@@ -14,7 +14,7 @@ class InfluxStatWriter:
     print('token=', os.environ.get("INFLUX_NODE_KEY"))
     print('ord=',os.environ.get("INFLUX_ORG"))
 
-    def __init__(self, host, port=8086, bucket='default', https=True):
+    def __init__(self, host, deployment_ids=[], port=8086, bucket='default', https=True):
         print('host=', host)
         self.host = host
         self.port = port
@@ -26,25 +26,26 @@ class InfluxStatWriter:
             token=os.environ.get("INFLUX_NODE_KEY"),
             org=self.org
           )
-        self.deployment_id = os.environ.get("NODE_DEPLOYMENT_ID")
+        self.deployment_ids = deployment_ids if len(deployment_ids) > 0 else [os.environ.get("NODE_DEPLOYMENT_ID")]
         self.write_api = self.client.write_api(write_options=SYNCHRONOUS)
     
 
-    def write_dict(self, measurement_name, datapoints):
+    def write_dict(self, measurement_name: str, datapoints: dict):
         buffer = []
-        for key, value in datapoints.items():
-            point = Point(
-              measurement_name
-              ).tag(
-                "deployment", self.deployment_id
-                ).field(key, value)
-            buffer.append(point)
-        
-        data_dict = {
-            "measurement": "chat_stats",
-            "tags": {"deployment": self.deployment_id},
-            "fields": datapoints
-        }
-        self.write_api.write(self.bucket, self.org, data_dict)
+        for id in self.deployment_ids:
+            for key, value in datapoints.items():
+                point = Point(
+                measurement_name
+                ).tag(
+                    "deployment", id
+                    ).field(key, value)
+                buffer.append(point)
+            
+            data_dict = {
+                "measurement": "chat_stats",
+                "tags": {"deployment": id},
+                "fields": datapoints
+            }
+            self.write_api.write(self.bucket, self.org, data_dict)
 
 

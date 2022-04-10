@@ -119,18 +119,18 @@ def get_args():
         type=str
     )
     parser.add_argument(
-        'nick',
-        default='proxy_default',
-        help='deployment ID of this IRC HTTP Proxy, default is proxy_default',
-        type=str
-    )
-    parser.add_argument(
         'nodenicks', 
         default='jumba_bot,pibot',
         help="comma-delineated list of nodes to proxy to \
             (#main is included by default)\n  e.g. jumba_bot,pibot",
         type=str
-    ),
+    )
+    parser.add_argument(
+        'nick',
+        default='proxy_default',
+        help='deployment ID of this IRC HTTP Proxy, default is proxy_default',
+        type=str
+    )
     parser.add_argument(
         '--password', 
         default=None, 
@@ -151,9 +151,7 @@ def main():
     jaraco.logging.setup(args)
     
     nodenicks = args.nodenicks.split(',')
-    print('NICKS',nodenicks)
     nodenicks = [nick.strip() for nick in nodenicks]
-    print('NICKS 2',nodenicks)
 
     client = AsyncIRCClient(
         host=args.server,
@@ -190,6 +188,7 @@ def main():
         client.message('#main', 'cmd::'+command+'::'+param_string)
         return 'success'
 
+
     @app.route("/control", methods=['POST'])
     async def control():
         # force=True will parse even without Application/Json Header
@@ -205,7 +204,7 @@ def main():
             params = params.split(',')
 
         print('sending to {}, {}'.format('#'+id, 'cmd::'+command+'::'+param_string))
-        client.message('#'+id, 'cmd::'+command+'::'+param_string)
+        client.message('#'+id, 'control::'+command+'::'+param_string)
         # also send the message to #main for visibility via the system firehose
         # client.message('#main', 'cmd::'+command+'::'+param_string)
         return 'success'
