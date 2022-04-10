@@ -822,6 +822,7 @@ class Reactor:
         log.log(logging.DEBUG - 2, "process_once()")
         sockets = self.sockets
         if sockets:
+            print(' !!! processing')
             in_, out, err = select.select(sockets, [], [], timeout)
             self.process_data(in_)
         else:
