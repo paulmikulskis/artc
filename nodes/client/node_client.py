@@ -65,6 +65,7 @@ class PiBot(SingleServerIRCBot):
     def on_welcome(self, c, e):
         c.join(self.channel)
         c.join('#'+self.nickname)
+        print('joined the "{}" channel'.format('#'+self.nickname))
 
     def on_privmsg(self, c, e):
         print('\nreceived private message:', e.arguments)
