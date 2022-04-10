@@ -820,6 +820,7 @@ class Reactor:
         at the process_forever method.
         """
         log.log(logging.DEBUG - 2, "process_once()")
+        print('trying to get socket')
         sockets = self.sockets
         if sockets:
             print(' !!! processing')
