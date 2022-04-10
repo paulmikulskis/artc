@@ -77,6 +77,7 @@ class PiBot(SingleServerIRCBot):
         # we don't want to do anything right now with the main channel, which is
         # only used more-or-less as a global firehose log of the system
         if e.target == '#main':
+            print('receivced some garbage')
             return 
         print('\nreceived public message:', e.arguments)
         self.do_command(e, e.arguments[0])
