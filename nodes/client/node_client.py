@@ -161,7 +161,7 @@ def statloop(influx_stat_writer: InfluxStatWriter, braiins: BraiinsOsClient, irc
     #miner_temps = device_map['miners'].get_temps()
     #influx_stat_writer.write_dict('miner_temps', miner_temps) 
     is_mining = braiins.is_mining()
-    is_mining = False
+    #is_mining = False
     temps = braiins.get_temperature_list()
     if temps[1]:
         temps: MinerAPIError = str(temps[1])
