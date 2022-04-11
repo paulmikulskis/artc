@@ -50,7 +50,7 @@ load_dotenv(join(BASEDIR, '../.base.env'))
 
 
 class PiBot(SingleServerIRCBot):
-    def __init__(self, channel, deployment_id, server, port=6667, password='1234count', stat_interval=2):
+    def __init__(self, channel, deployment_id, server, port=6667, password='1234count', stat_interval=6):
         if isinstance(os.environ.get("STAT_WRITER_INTERVAL_SEC"), int): stat_interval = os.environ.get("STAT_WRITER_INTERVAL_SEC")
         SingleServerIRCBot.__init__(self, [(server, port, password)], deployment_id, deployment_id)
         self.channel = channel
@@ -155,10 +155,11 @@ to the server and InfluxDB
 def statloop(influx_stat_writer: InfluxStatWriter, braiins: BraiinsOsClient, irc_connection: ServerConnection):
     print('\nsending stats...')
     stats = {k: v() for k, v in stat_map.items()}
-    #miner_temps = device_map['miners'].get_temps()
     influx_stat_writer.write_dict('main_stats', stats)
-    #influx_stat_writer.write_dict('miner_temps', miner_temps) 
     irc_connection.privmsg('#'+irc_connection.nickname, 'stats::'+json.dumps(stats))
+
+    #miner_temps = device_map['miners'].get_temps()
+    #influx_stat_writer.write_dict('miner_temps', miner_temps) 
     #is_mining = braiins.is_mining()
     is_mining = False
     temps = braiins.get_temperature_list()
