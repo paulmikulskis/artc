@@ -225,10 +225,11 @@ class BraiinsOsClient:
             Dict[ip: MinerAPIResponse]
         '''
         if ((not isinstance(hosts, list) and (hosts is not None))): hosts = [hosts]
-        START_COMMAND = '/etc/init.d/bosminer stop'
+        STOP_COMMAND = '/etc/init.d/bosminer stop'
         resps = []
         for host in self.filter_hosts_to_contact(hosts):
-            out, err = self._send_ssh_command(START_COMMAND, host)
+            print('!! miners: sending "{}" to {}'.format(STOP_COMMAND, host))
+            out, err = self._send_ssh_command(STOP_COMMAND, host)
             if err:
                 resps.append(self._format_MinerAPIResponse('E', 'SSH ERROR', -1, datetime.datetime.now(), err))
             else:
