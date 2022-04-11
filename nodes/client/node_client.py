@@ -161,14 +161,14 @@ def statloop(influx_stat_writer: InfluxStatWriter, braiins: BraiinsOsClient, irc
     irc_connection.privmsg('#'+irc_connection.nickname, 'stats::'+json.dumps(stats))
     #is_mining = braiins.is_mining()
     is_mining = False
-    temps = braiins.get_temperature_list()
-    if temps[1]:
-        temps: MinerAPIError = str(temps[1])
-    else:
-        temps: Dict[str, List[Tuple[str]]] = temps[0]
-        for k, v in temps.items():
-                temps[k] = {**{'board_'+str(d[2]): {'board': d[0], 'chip': d[1]} for d in v}, 'mining': is_mining.get(k) or 'UNKNOWN'}
-                
+    # temps = braiins.get_temperature_list()
+    # if temps[1]:
+    #     temps: MinerAPIError = str(temps[1])
+    # else:
+    #     temps: Dict[str, List[Tuple[str]]] = temps[0]
+    #     for k, v in temps.items():
+    #             temps[k] = {**{'board_'+str(d[2]): {'board': d[0], 'chip': d[1]} for d in v}, 'mining': is_mining.get(k) or 'UNKNOWN'}
+    temps={}            
     irc_connection.privmsg('#'+irc_connection.nickname, 'miner::'+json.dumps(temps))
 
 
