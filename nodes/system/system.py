@@ -24,8 +24,8 @@ THERMISTOR_ADDRESSES = {
 # each device should have a name, and be mapped to an object
 # that extends device.Device
 device_map: Dict[str, Device] = {
-    'pump_oil': RelaySwitch('pump_oil', False, DigitalInOut(board.D26)),
-    'pump_water': RelaySwitch('pump_water', False, DigitalInOut(board.D19)),
+    'pump_oil': RelaySwitch('pump_oil', False, DigitalInOut(board.D19)),
+    'pump_water': RelaySwitch('pump_water', False, DigitalInOut(board.D26)),
     'therm_oil': OneWireThermister('therm_oil', 1, THERMISTOR_ADDRESSES),
     'therm_water': OneWireThermister('therm_water', 2, THERMISTOR_ADDRESSES),
     'miners': SystemMiners('antminer')
