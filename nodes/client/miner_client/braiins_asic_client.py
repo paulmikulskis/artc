@@ -299,7 +299,7 @@ class BraiinsOsClient:
         password = host['password']
         print(' paramiko attempting to connect to {} as {}:{}'.format(host['ip'], user, password))
         try:
-            ssh.connect(host['ip'], username=user, password=password)
+            ssh.connect(host['ip'], username=user, password=password, timeout=1)
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(command)
             err = ssh_stderr.read().decode('utf-8')
             out = ssh_stdout.read().decode('utf-8')
