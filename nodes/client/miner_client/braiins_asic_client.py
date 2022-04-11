@@ -472,7 +472,11 @@ class BraiinsOsClient:
             return self._format_MinerAPIResponse('E', 'unable to reach miner', 404)
         log.info('sending "{}" to {}'.format(command, host['connect_string']))
         sock.sendall(bytes(command, 'utf-8'))
-        response = sock.recv(8192)
+        response = ''
+        try:
+            response = sock.recv(8192)
+        except:
+            print('braiinsOS client timed out, setting response to a blank string')
         data = response.decode('utf-8').strip()
         # cuts off any extra data after the last bracket from decoding
         data = "".join([data.rsplit("}" , 1)[0] , "}"])
