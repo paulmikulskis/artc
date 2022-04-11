@@ -478,6 +478,7 @@ class BraiinsOsClient:
         data = "".join([data.rsplit("}" , 1)[0] , "}"])
         data = json.loads(data)
         resp = MinerAPIResponse(data)
+        sock.close()
         # print('miner response:')
         # print(resp)
         return resp
