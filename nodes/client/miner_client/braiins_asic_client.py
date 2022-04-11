@@ -305,6 +305,7 @@ class BraiinsOsClient:
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(command)
             err = ssh_stderr.read().decode('utf-8')
             out = ssh_stdout.read().decode('utf-8')
+            print('\n\n!!SSH OUT AND ERR:\nOUT:{}\nERR:{}'.format(out, err))
             if len(err) == 0: err = None
             if len(out) == 0: out = None
             ssh.close()
