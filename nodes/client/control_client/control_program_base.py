@@ -92,7 +92,7 @@ class Program:
             log.warning('no lookback history available for the "{}" program'.format(self.name))
             return None
         log.debug('sucessfully pulled "{}" history for the "{}" program, msg: "{}"'.format(type, self.name, last[-1].message()))
-        return last[-1]
+        return last[0]
 
 
     def target(self):
