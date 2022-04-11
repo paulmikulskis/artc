@@ -134,7 +134,7 @@ class BraiinsOsClient:
         self, 
         hosts: List[str] or str = None, 
         port: List[int] or int = 4028, 
-        timeout: int = 2,
+        timeout: int = 3,
         password: str = '1234count'
       ):
         self.timeout = timeout

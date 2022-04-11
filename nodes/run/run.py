@@ -26,7 +26,7 @@ def executeFunction(function_name, function_params):
         return executeMinerFunction(*function_params)
 
 
-def executeMinerFunction(command, hosts=None):
+def executeMinerFunction(command, hosts=[]):
     miner_clients: List[SystemMiners] = list(map(lambda y: y[1], filter(lambda x: isinstance(x[1], SystemMiners), device_map.items())))
     print('  executing Miner Function...')
     print('  clients to address: {}'.format(miner_clients))
