@@ -235,7 +235,7 @@ class BraiinsOsClient:
             else:
                 resps.append(self._format_MinerAPIResponse('S', 'sent {}'.format(out), 200, datetime.datetime.now()))
 
-        print('MINER RESPONSES:', str(resps[0]))
+        print('MINER RESPONSES:', str(resps[0].error))
         return resps
 
 
