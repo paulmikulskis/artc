@@ -213,7 +213,7 @@ def main():
     # start the server app and the IRC bot:
     try:
         loop = client.get_loop()
-        loop.create_task(app.run_task())
+        loop.create_task(app.run_task(host='0.0.0.0'))
         print('=== about to start HTTP IRC client...')
         client.start()
         print('SECOND!')

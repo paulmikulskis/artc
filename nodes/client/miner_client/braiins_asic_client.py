@@ -337,7 +337,7 @@ class BraiinsOsClient:
             if len(out) == 0: out = None
             ssh.close()
             log.info('sent ssh command to {}'.format(host['ip']))
-            log.debug('received: "{}"'.format(out.replace('\n','')))
+            log.debug('received: "{}"'.format(out.replace('\n',' ')))
         except Exception as e:
             out = None
             err = 'unable to SSH to {} as {}:{}, msg: {}'.format(host['ip'], user, password, str(e))
