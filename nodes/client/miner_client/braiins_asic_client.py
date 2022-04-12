@@ -418,8 +418,6 @@ class BraiinsOsClient:
         errors = []
         for ret in temps:
             api = ret[1]
-            print('error:', api.error)
-            print('api:', api)
             if api.error:
                 return None, api.error
 
