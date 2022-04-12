@@ -305,13 +305,14 @@ class BraiinsOsClient:
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(command)
             err = ssh_stderr.read().decode('utf-8')
             out = ssh_stdout.read().decode('utf-8')
-            print('\n\n!!SSH OUT AND ERR:\nOUT:{}\nERR:{}'.format(out, err))
+            #print('\n\n!!SSH OUT AND ERR:\nOUT:{}\nERR:{}'.format(out, err))
             if len(err) == 0: err = None
             if len(out) == 0: out = None
             ssh.close()
         except Exception as e:
             out = None
-            err = 'unable to SSH to {} as {}:{}'.format(host['ip'], user, password)
+            err = 'unable to SSH to {} as {}:{}, msg: {}'.format(host['ip'], user, password, str(e))
+            print(err)
 
         return out, err
 
