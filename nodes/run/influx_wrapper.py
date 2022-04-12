@@ -18,7 +18,7 @@ if log_type not in ['FULL', 'CLEAN']:
     log_type = 'FULL'
 
 ch = logging.StreamHandler()
-log = logging.getLogger('node_client')
+log = logging.getLogger('influx_client')
 
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p') if log_type == 'FULL' else logging.Formatter('%(name)s - %(message)s')
 ch.setFormatter(formatter)
