@@ -175,8 +175,8 @@ def statloop(influx_stat_writer: InfluxStatWriter, braiins: BraiinsOsClient, irc
     log.debug('stats successfully written to InfluxDB')
     try:
         stats = json.dumps(stats)
-        log.debug('wrote stats:', json.dumps(stats))
-        irc_connection.privmsg('#'+irc_connection.nickname, 'stats::'+json.dumps(stats))
+        log.debug('wrote stats:', stats)
+        irc_connection.privmsg('#'+irc_connection.nickname, 'stats::'+stats)
     except:
         log.error('unable to jsonify stats received by stat_map functiong, skipping IRC communications!')
     
