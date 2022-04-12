@@ -34,6 +34,7 @@ class MinerAPIResponseType(Enum):
     CLIENT_ERROR = 'CLIENT_ERROR'
     MINER_ERROR = 'MINER_ERROR'
     SSH_ERROR = 'SSH_ERROR'
+    NO_RESPONSE = 'NO_RESPONSE'
 
 
 MinerAPIErrorCodes = {
@@ -52,7 +53,8 @@ MinerAPIErrorCodes = {
     # SSH error
     -1: MinerAPIResponseType.SSH_ERROR,
     # Host or resource cannot be found
-    404: MinerAPIResponseType.CANNOT_CONNECT
+    404: MinerAPIResponseType.CANNOT_CONNECT,
+    -2: MinerAPIResponseType.NO_RESPONSE
 
 }
 
@@ -477,14 +479,17 @@ class BraiinsOsClient:
         log.info('sending "{}" to {}'.format(command, host['connect_string']))
         sock.sendall(bytes(command, 'utf-8'))
         data = '{}'
+        resp = None
         try:
             data = sock.recv(8192).decode('utf-8').strip()
+            # cuts off any extra data after the last bracket from decoding
+            data = "".join([data.rsplit("}" , 1)[0] , "}"])
+            data = json.loads(data)
+            resp = MinerAPIResponse(data)
         except:
             print('braiinsOS client timed out, setting data to {}')
-        # cuts off any extra data after the last bracket from decoding
-        data = "".join([data.rsplit("}" , 1)[0] , "}"])
-        data = json.loads(data)
-        resp = MinerAPIResponse(data)
+            resp = self._format_MinerAPIResponse('E', 'not able to receive data from miner sock.recv', -2)
+            
         sock.close()
         # print('miner response:')
         # print(resp)
