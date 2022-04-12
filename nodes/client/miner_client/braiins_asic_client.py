@@ -5,15 +5,40 @@ import datetime
 from enum import Enum
 import json
 import logging
+import os
+from posixpath import abspath, dirname, join
 import pprint
 import socket
 from sys import stderr
 import time
 from typing import Dict, List, Tuple
 from unittest import result
+from dotenv import load_dotenv
 import paramiko
 
-log = logging.getLogger(__name__)
+BASEDIR = abspath(dirname(__file__))
+load_dotenv(join(BASEDIR, '../../../.base.env'))
+log_level = os.environ.get("LOG_LEVEL")
+log_type = os.environ.get("LOG_TYPE")
+
+if log_level not in list(map(lambda x: x[1], logging._levelToName.items())):
+    log_level = 'INFO'
+if log_type not in ['FULL', 'CLEAN']:
+    log_type = 'FULL'
+
+ch = logging.StreamHandler()
+# log = logging.getLogger(__name__.split('.')[-1])
+log = logging.getLogger('miner_client')
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p') if log_type == 'FULL' else logging.Formatter('%(name)s - %(message)s')
+ch.setFormatter(formatter)
+log.addHandler(ch)
+log.setLevel(log_level)
+logging.basicConfig(
+    filename='control.log',
+    encoding='utf-8', 
+    level=logging.DEBUG
+)
 
 def f(n, roundn=3) -> float:
     '''
@@ -301,7 +326,7 @@ class BraiinsOsClient:
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         user = self.user
         password = host['password']
-        print(' paramiko attempting to connect to {} as {}:{}'.format(host['ip'], user, password))
+        log.debug(' paramiko attempting to connect to {} as {}:{}'.format(host['ip'], user, password))
         try:
             ssh.connect(host['ip'], username=user, password=password, timeout=3)
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(command)
@@ -311,10 +336,12 @@ class BraiinsOsClient:
             if len(err) == 0: err = None
             if len(out) == 0: out = None
             ssh.close()
+            log.info('sent ssh command to {}'.format(host['ip']))
+            log.debug('received: "{}"'.format(out))
         except Exception as e:
             out = None
             err = 'unable to SSH to {} as {}:{}, msg: {}'.format(host['ip'], user, password, str(e))
-            print(err)
+            log.warn(err)
 
         return out, err
 
@@ -486,10 +513,11 @@ class BraiinsOsClient:
             data = "".join([data.rsplit("}" , 1)[0] , "}"])
             data = json.loads(data)
             resp = MinerAPIResponse(data)
+            log.debug('{} produced response: {}'.format(host['connect_string'], resp))
         except:
-            print('braiinsOS client timed out, setting data to {}')
+            log.error('braiinsOS client timed out, setting data to {}')
             resp = self._format_MinerAPIResponse('E', 'not able to receive data from miner sock.recv', -2)
-            
+
         sock.close()
         # print('miner response:')
         # print(resp)

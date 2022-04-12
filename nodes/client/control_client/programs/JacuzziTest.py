@@ -105,25 +105,25 @@ class JacuzziTest(ProgramFunctionBase):
             if therm_water < self.target_temp:
                 if not pump_oil:    connection.privmsg(event.target_string(), 'cmd::chng::pump_oil,on')
                 if not pump_water:  connection.privmsg(event.target_string(), 'cmd::chng::pump_water,on')
-                if not pump_oil and not pump_water: connection.privmsg(event.target_string(), 'func::miner::start')
+                if not pump_oil and not pump_water: connection.privmsg(event.target_string(), 'cmd::func::miner::start')
                 self.set_phase_to('heating')
                 return True
             if therm_water > self.target_temp:
                 if pump_oil:    connection.privmsg(event.target_string(), 'cmd::chng::pump_oil,off')
                 if pump_water:  connection.privmsg(event.target_string(), 'cmd::chng::pump_water,off')
-                #if not pump_oil and not pump_water: connection.privmsg(event.target_string(), 'func::miner::stop')
+                #if not pump_oil and not pump_water: connection.privmsg(event.target_string(), 'cmd::func::miner::stop')
                 return True
             
         if context['phase'] == 'heating':
             if therm_water < self.target_temp:
                 if not pump_oil:    connection.privmsg(event.target_string(), 'cmd::chng::pump_oil,on')
                 if not pump_water:  connection.privmsg(event.target_string(), 'cmd::chng::pump_water,on')
-                if not pump_oil and not pump_water: connection.privmsg(event.target_string(), 'func::miner::start')
+                if not pump_oil and not pump_water: connection.privmsg(event.target_string(), 'cmd::func::miner::start')
                 return True
             if therm_water > self.target_temp:
                 if pump_oil:    connection.privmsg(event.target_string(), 'cmd::chng::pump_oil,off')
                 if pump_water:  connection.privmsg(event.target_string(), 'cmd::chng::pump_water,off')
-                connection.privmsg(event.target_string(), 'func::miner::stop')
+                connection.privmsg(event.target_string(), 'cmd::func::miner::stop')
                 self.set_phase_to('rest')
                 return True
             

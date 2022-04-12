@@ -27,6 +27,7 @@ The known commands are:
 
 import functools
 import json
+import logging
 import os
 import time
 from typing import Dict, List, Tuple
@@ -48,6 +49,22 @@ from system.system import stat_map, device_map
 BASEDIR = abspath(dirname(__file__))
 load_dotenv(join(BASEDIR, '../.base.env'))
 
+log_level = os.environ.get("LOG_LEVEL")
+log_type = os.environ.get("LOG_TYPE")
+
+if log_level not in list(map(lambda x: x[1], logging._levelToName.items())):
+    log_level = 'INFO'
+if log_type not in ['FULL', 'CLEAN']:
+    log_type = 'FULL'
+
+ch = logging.StreamHandler()
+log = logging.getLogger('node_client')
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p') if log_type == 'FULL' else logging.Formatter('%(name)s - %(message)s')
+ch.setFormatter(formatter)
+log.addHandler(ch)
+log.setLevel(log_level)
+
 
 class PiBot(SingleServerIRCBot):
     def __init__(self, channel, deployment_id, server, port=6667, password='1234count', stat_interval=6):
@@ -68,20 +85,19 @@ class PiBot(SingleServerIRCBot):
         print('joined the "{}" channel'.format('#'+self.nickname))
 
     def on_privmsg(self, c, e):
-        print('!!!! received private message:', e.arguments)
+        log.debug('received a private message from {}: {}'.format(e.source.nick, e.arguments[0]))
         self.do_command(e, e.arguments[0])
 
     def on_pubmsg(self, c, e):
-        print('!!!! received public message', e.arguments)
         the_message = e.arguments[0]
+        log.debug('received a public message from {}: {}'.format(e.source.nick, the_message))
         #command = the_message.split(':')[0]
 
         # we don't want to do anything right now with the main channel, which is
         # only used more-or-less as a global firehose log of the system
         if e.target == '#main':
-            print('receivced some garbage')
+            log.info('received a message in the #main channel: {}'.format(e.arguments[0]))
             return 
-        print('\nreceived public message:', e.arguments)
         self.do_command(e, e.arguments[0])
 
         print('\nreceived message from controller:\n    {}'.format(the_message))
@@ -153,14 +169,24 @@ Main loop that defines the frequency of global stat updates
 to the server and InfluxDB
 '''
 def statloop(influx_stat_writer: InfluxStatWriter, braiins: BraiinsOsClient, irc_connection: ServerConnection):
-    print('\nsending stats...')
+    log.info('collecting and sending stats...')
     stats = {k: v() for k, v in stat_map.items()}
     influx_stat_writer.write_dict('main_stats', stats)
-    irc_connection.privmsg('#'+irc_connection.nickname, 'stats::'+json.dumps(stats))
-
-    #miner_temps = device_map['miners'].get_temps()
-    #influx_stat_writer.write_dict('miner_temps', miner_temps) 
+    log.debug('stats successfully written to InfluxDB')
+    try:
+        stats = json.dumps(stats)
+        log.debug('wrote stats:', json.dumps(stats))
+        irc_connection.privmsg('#'+irc_connection.nickname, 'stats::'+json.dumps(stats))
+    except:
+        log.error('unable to jsonify stats received by stat_map functiong, skipping IRC communications!')
+    
+    log.debug('getting miner temperatures')
+    miner_temps = device_map['miners'].get_temps()
+    influx_stat_writer.write_dict('miner_temps', miner_temps)
+    log.debug('successfully wrote miner temperatures to InfluxDB')
+    
     is_mining = braiins.is_mining()
+    log.debug('polled if ASICs are mining:', is_mining)
     #is_mining = False
     temps = braiins.get_temperature_list()
     if temps[1]:
@@ -177,7 +203,7 @@ def main():
     import sys
 
     if len(sys.argv) != 4:
-        print("Usage: testbot <server[:port]> <channel> <nickname> <password>")
+        log.error("Usage: testbot <server[:port]> <channel> <nickname> <password>")
         sys.exit(1)
 
     s = sys.argv[1].split(":", 1)
@@ -186,7 +212,7 @@ def main():
         try:
             port = int(s[1])
         except ValueError:
-            print("Error: Erroneous port.")
+            log.error("Error: Erroneous port.")
             sys.exit(1)
     else:
         port = 6667
@@ -194,11 +220,15 @@ def main():
     nickname = sys.argv[3]
 
     # instantiate loop-running classes, writers, listeners here:
+    log.info('instantiating influx client at {}'.format(os.environ.get("INFLUX_HOST")))
     influx_stat_writer = InfluxStatWriter(os.environ.get("INFLUX_HOST"))
+    log.info('connecting BraiinsOs client at {}:{}'.format(os.environ.get("MINING_HOST"), os.environ.get("MINING_PASSWORD")))
     braiins = BraiinsOsClient(os.environ.get("MINING_HOST"), password=os.environ.get("MINING_PASSWORD"))
+    log.info('creating IRC bot, channel="{}", nickname="{}", server="{}", port="{}"'.format(channel, nickname, server, port))
     bot = PiBot(channel, nickname, server, port)
 
     # device_map['flow1'].listen()
     bot.reactor.scheduler.execute_every(bot.stat_interval, functools.partial(statloop, influx_stat_writer, braiins, bot.connection))
+    log.info('🚀 calling bot.start()... ')
     bot.start()
 
