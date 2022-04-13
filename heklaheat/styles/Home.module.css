@@ -1,0 +1,24 @@
+.temperature {
+  position: relative;
+  flex: 1 1 auto;
+}
+
+.temp {
+  position: absolute;
+  width: 2em;
+  height: 1.5em;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  margin: auto;
+  color: white;
+  font-size: 2em;
+  text-align: center;
+}
+
+.temp span {
+  font-size: 0.5em;
+  vertical-align: top;
+  padding: 0 0.25em;
+}

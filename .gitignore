@@ -6,3 +6,4 @@ influxd.bolt
 braiins-os*
 *.log
 irc_examples
+node_modules*
