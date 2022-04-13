@@ -115,7 +115,7 @@ class JacuzziTest(ProgramFunctionBase):
                 return True
             
         if context['phase'] == 'heating':
-            if therm_water < self.target_temp:
+            if therm_water < self.target_temp + 1:
                 if not pump_oil:    connection.privmsg(event.target_string(), 'cmd::chng::pump_oil,on')
                 if not pump_water:  connection.privmsg(event.target_string(), 'cmd::chng::pump_water,on')
                 if not pump_oil and not pump_water: connection.privmsg(event.target_string(), 'cmd::func::miner::start')
