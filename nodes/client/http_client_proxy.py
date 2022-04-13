@@ -25,9 +25,11 @@ from os.path import join, dirname, abspath
 from dotenv import load_dotenv
 
 from quart import Quart, request
+from quart_cors import cors
 import quart.flask_patch
 
 app = Quart(__name__)
+app = cors(app)
 
 # Get the path to the directory this file is in
 # and pull the .env file
@@ -161,7 +163,6 @@ def main():
         password=args.password
     )
     client.connect()
-
 
     @app.route("/")
     async def home():
