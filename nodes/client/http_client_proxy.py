@@ -29,7 +29,7 @@ from quart_cors import cors
 import quart.flask_patch
 
 app = Quart(__name__)
-app = cors(app)
+app = cors(app, allow_origin="*")
 
 # Get the path to the directory this file is in
 # and pull the .env file
