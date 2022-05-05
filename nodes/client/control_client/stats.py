@@ -12,6 +12,7 @@ from client.control_client.control_program_base import Program
 # import and list all programs here:
 from client.control_client.programs.HandOnOffTest import HandOnOffTest
 from client.control_client.programs.JacuzziTest import JacuzziTest
+from client.control_client.control_client import ControlError
 
 ALL_PROGRAMS = [
     HandOnOffTest,
@@ -53,7 +54,7 @@ class MessageProcessor:
         self.logger = log
 
 
-    def process(self, connection: ServerConnection, event: Event ):
+    def process(self, connection: ServerConnection, event: Event ) -> List[bool or None, ControlError or None]:
         if (event.message().split('::')[::-1].pop() == 'control') or (event.message().split('::')[::-1].pop() == 'control_bot'):
             self.logger.info('intaking command message from {}'.format(event.source_string()))
             return self.intake_command(connection, event)
@@ -66,21 +67,24 @@ class MessageProcessor:
             
  
 
-    def intake_command(self, connection: ServerConnection, event: Event):
+    def intake_command(self, connection: ServerConnection, event: Event) -> List[bool or None, ControlError or None]:
         message = event.message()
         parts = message.split('::')
         if len(parts) < 2:
-            self.logger.error('unable to intake_command: "{}"'.format(message))
-            return False
+            msg = 'unable to intake_command: "{}"'.format(message)
+            self.logger.error(msg)
+            return [None, ControlError(msg, 500, None)]
         switch = parts[0]
         # only accepting 'cmd' messages at this time
         if switch != 'control':
-            self.logger.error('unable to intake_command: "{}"'.format(message))
-            return [False]
+            msg = 'unable to intake_command: "{}"'.format(message)
+            self.logger.error(msg)
+            return [None, ControlError(msg, 500, None)]
 
         if len(parts) < 3:
-            self.logger.error('unable to intake_command, no third piece: "{}"'.format(message))
-            return [False]
+            msg = 'unable to intake_command, no third piece: "{}"'.format(message)
+            self.logger.error(msg)
+            return [None, ControlError(msg, 500, None)]
 
         command = parts[1]
         args = parts[2].split(',')
@@ -97,11 +101,12 @@ class MessageProcessor:
             connection.privmsg(event.target, 'stopping programs "{}"'.format(args))
             return self.stop_processing(program_name)
         
-        self.logger.error('command "{}" not implemented yet...  arguments: {}'.format(command, args))
-        return [False]
+        msg = '"{}" not implemented yet...  arguments: {}'.format(command, args)
+        self.logger.error(msg)
+        return [None, ControlError(msg, 500, None)]
 
 
-    def process_node_message(self, connection: ServerConnection, event: Event):
+    def process_node_message(self, connection: ServerConnection, event: Event) -> List[bool or None, ControlError or None]:
         target = event.target
         if len(target) < 2:
             return {}
@@ -119,7 +124,7 @@ class MessageProcessor:
         return results_map
 
 
-    def start_processing(self, program: Program):
+    def start_processing(self, program: Program) -> List[bool or None, ControlError or None]:
         '''
         Adds a Program to this MessageProcessor, as long as no other program with this name exists
         '''
@@ -134,7 +139,7 @@ class MessageProcessor:
         return True
 
 
-    def stop_processing(self, name: str):
+    def stop_processing(self, name: str) -> List[bool or None, ControlError or None]:
         '''
         Tells this MessageProcessor to stop running the program with name 'name'
         '''

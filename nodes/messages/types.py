@@ -43,6 +43,9 @@ class ErrorType(Enum):
     PROCEDURE_IS_METHOD = 32604
     PARSE_ERROR = 32700
     NO_DEVICE = 42069
+    DEVICE_ERROR = 42070
+    MINER_ERROR = 42071
+    INFLUX_ERROR = 42072
 
 
 ErrorDict = {

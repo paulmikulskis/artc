@@ -6,3 +6,5 @@ influxd.bolt
 braiins-os*
 *.log
 irc_examples
+heklaheat/*
+node_modules/*

@@ -130,7 +130,7 @@ class MinerAPIResponse:
             self.response_type = MinerAPIResponseType.MINER_ERROR,
             self.message = 'unrecognized error response',
             self.time = datetime.datetime.now(),
-            self.error = 'unrecognized error response',
+            self.error = None,
             self.data = None
       
 
@@ -282,7 +282,7 @@ class BraiinsOsClient:
         for host in self.filter_hosts_to_contact(hosts):
             out, err = self._send_ssh_command(COMMAND, host)
             if out is not None: resps[host['hostname']] = True
-            else: resps[host['hostname']] = False
+            else: resps[host['hostname']] = self._format_MinerAPIResponse('E', err, 500)
 
         return resps
 
@@ -431,18 +431,17 @@ class BraiinsOsClient:
         }, None
 
 
-    def get_tempterature_stats(self) -> dict[str, int]:
+    def get_tempterature_stats(self) -> List[dict[str, int] or None, MinerAPIError or None]:
         templist = self.get_temperature_list()
         if templist[1] is not None:
-            err = True
-            return {}
+            return [None, templist[1]]
         else:
             templist = templist[0]
 
         keys = list(templist.keys())
         temps = {'c'+str(keys.index(host))+'_board_'+str(d[2]): f(d[0]) for host, data in templist.items() for d in data }
         # temps2 = {'c'+str(keys.index(host))+'_chip_'+str(d[2]): d[1] for host, data in templist.items() for d in data }
-        return temps
+        return [temps, None]
 
     
     def get_details(self, hosts: List[str] = None) -> List[MinerAPIResponse]:

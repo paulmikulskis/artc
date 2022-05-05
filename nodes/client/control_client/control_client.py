@@ -42,7 +42,8 @@ from os.path import join, dirname, abspath
 from dotenv import load_dotenv
 from threading import Thread
 
-from client.control_client.stats import MessageProcessor, Program
+from client.control_client.stats import Program
+from client.control_client.processor import MessageProcessor
 from client.control_client.programs.HandOnOffTest import HandOnOffTest
 from client.control_client.programs.JacuzziTest import JacuzziTest
 from run.influx_wrapper import InfluxStatWriter
@@ -67,6 +68,17 @@ log.addHandler(ch)
 log.setLevel(log_level)
 
 
+class ControlError:
+
+    def __init__(self, msg: str, code: int, e: Exception or None):
+        self.msg = msg
+        self.code = code
+        self.exception = e
+
+    def __str__(self):
+        return '{}: {}\nexception: {}'.format(self.code, self.msg, self.exception)
+
+
 class ControlBot(SingleServerIRCBot):
     def __init__(self, channel, nickname, server, nodenicks, port=6667, password='1234count', stat_interval=2):
         if isinstance(os.environ.get("STAT_WRITER_INTERVAL_SEC"), int): stat_interval = os.environ.get("STAT_WRITER_INTERVAL_SEC")
@@ -75,14 +87,16 @@ class ControlBot(SingleServerIRCBot):
         self.stat_interval = stat_interval
         self.password = password
         self.nickname = nickname
+        if not isinstance(nodenicks, list):
+            log.error('nodenicks passed to ControlBot MUST be a list: {}'.format(nodenicks))
+            exit()
         self.nodenicks = nodenicks
         log.info('ControlBot connecting to {}:{} on {}'.format(server, port, nodenicks.append('main')))
         log.debug('creating new message processor with nodenicks={}'.format(nodenicks))
 
-        programs = [
-            Program(JacuzziTest(target_temp=98)),
-        ]
-        self.processor = MessageProcessor(self.nodenicks, programs)
+
+        default_program = Program(JacuzziTest(target_temp=98))
+        self.processor = MessageProcessor(self.nodenicks, default_program)
 
 
     def on_nicknameinuse(self, c, e):
@@ -100,27 +114,15 @@ class ControlBot(SingleServerIRCBot):
     def on_pubmsg(self, connection, event):
         log.debug('received public message: {}'.format(event.arguments))
         if (event.target[1:] == self.nickname) or (event.target[1:] in self.nodenicks):
-            self.processor.process(connection, event)
-        return
-
-    def on_dccmsg(self, c, e):
-        return
-        # non-chat DCC messages are raw bytes; decode as text
-        text = e.arguments[0].decode('utf-8')
-        c.privmsg("You said: " + text)
-
-    def on_dccchat(self, c, e):
-        return
-        if len(e.arguments) != 2:
-            return
-        args = e.arguments[1].split()
-        if len(args) == 4:
-            try:
-                address = ip_numstr_to_quad(args[2])
-                port = int(args[3])
-            except ValueError:
+            response = self.processor.process(connection, event)
+            # parse response for error, report to Supabase if error
+            if response[1]:
+                # supabase post
                 return
-            self.dcc_connect(address, port)
+            else:
+                log.debug('successfully process message for {}'.format(event.target[1:]))
+                return
+
 
     def do_command(self, e, cmd):
         if '::' in cmd:
@@ -130,14 +132,20 @@ class ControlBot(SingleServerIRCBot):
 
 
 def statloop(influx_stat_writer: InfluxStatWriter, controller: ControlBot):
-    controller_dict = {
-            'programs': json.dumps({prog.active_function.name: {**prog.active_function.args, 'phase': prog.context['phase']} for prog in controller.processor.programs})
-        }
-    influx_stat_writer.write_dict(
-        'controller',
-        controller_dict
-        )
-    controller.processor.logger.info('sending state to influx: {}'.format(str(controller_dict)[1:-1]))
+
+    for deployment_id, program in controller.processor.deployments.items():
+        controller_dict = {
+                'program': json.dumps({
+                    program.active_function.name: 
+                        {**program.active_function.args, 'phase': program.context['phase']}
+                        })
+            }
+        influx_stat_writer.write_dict(
+            'controller',
+            controller_dict,
+            deployment_id=deployment_id
+            )
+        controller.processor.logger.info('sending state to influx: {}'.format(str(controller_dict)[1:-1]))
 
 
 def main():

@@ -28,6 +28,7 @@ device_map: Dict[str, Device] = {
     'pump_water': RelaySwitch('pump_water', False, DigitalInOut(board.D26)),
     'therm_oil': OneWireThermister('therm_oil', 1, THERMISTOR_ADDRESSES),
     'therm_water': OneWireThermister('therm_water', 2, THERMISTOR_ADDRESSES),
+    'miner_power': RelaySwitch('miner_power', False, DigitalInOut(board.D13)),
     'miners': SystemMiners('antminer')
 }
 

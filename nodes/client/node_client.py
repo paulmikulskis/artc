@@ -36,12 +36,13 @@ from irc import strings
 from irc.client import ip_numstr_to_quad, ip_quad_to_numstr, ServerConnection
 from messages.scribe import parseMessage
 from client.miner_client.braiins_asic_client import MinerAPIError
+from nodes.messages.types import PiError
 from system.system import device_map
 from run.influx_wrapper import InfluxStatWriter
 from os.path import join, dirname, abspath
 from dotenv import load_dotenv
 from client.miner_client.braiins_asic_client import BraiinsOsClient
-
+from supabase import create_client, Client
 
 from system.system import stat_map, device_map
 
@@ -65,6 +66,12 @@ ch.setFormatter(formatter)
 log.addHandler(ch)
 log.setLevel(log_level)
 
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+
+url: str = SUPABASE_URL
+key: str = SUPABASE_KEY
+supabase: Client = create_client(url, key)
 
 class PiBot(SingleServerIRCBot):
     def __init__(self, channel, deployment_id, server, port=6667, password='1234count', stat_interval=6):
@@ -98,7 +105,9 @@ class PiBot(SingleServerIRCBot):
         if e.target == '#main':
             log.info('received a message in the #main channel: {}'.format(e.arguments[0]))
             return 
-        self.do_command(e, e.arguments[0])
+
+        # !!!!!! ?
+        # self.do_command(e, e.arguments[0])
 
         print('\nreceived message from controller:\n    {}'.format(the_message))
         
@@ -106,9 +115,22 @@ class PiBot(SingleServerIRCBot):
         # to the channel of this node's deployment ID
         if e.target == '#'+self.nickname:
             # if the message is intended for this PiBot, then parse:
-            result = parseMessage(the_message)
-            if result is not True:
-                print(result)
+            result: List[any or None, PiError or None] = parseMessage(the_message)
+            error = result[1]
+            if error is not None:
+                # post error to subapase table for this deploymentid
+                data = supabase.table('errors').insert(
+                    {
+                        'deployment_id': self.nickname,
+                        'message': str(error),
+                        'severity': 10,
+                        'code': 500
+                        }
+                    ).execute()
+
+            else:
+                handleMessageResponse = result[0]
+                return True
 
         return
 
@@ -134,9 +156,22 @@ class PiBot(SingleServerIRCBot):
         c = self.connection
         if '::' in cmd:
             print('received Pi command: {}'.format(cmd))
-            result = parseMessage(cmd)
-            if result is not True:
-                print(result)
+            result: List[any or None, PiError or None] = parseMessage(cmd)
+            error = result[1]
+            if error is not None:
+                # post error to subapase table for this deploymentid
+                data = supabase.table('errors').insert(
+                    {
+                        'deployment_id': self.nickname,
+                        'message': str(error),
+                        'severity': 10,
+                        'code': 500
+                        }
+                    ).execute()
+
+            else:
+                handleMessageResponse = result[0]
+                return True
 
         if cmd == "disconnect":
             self.disconnect()
@@ -171,7 +206,28 @@ to the server and InfluxDB
 def statloop(influx_stat_writer: InfluxStatWriter, braiins: BraiinsOsClient, irc_connection: ServerConnection):
     log.info('collecting and sending stats...')
     stats = {k: v() for k, v in stat_map.items()}
-    influx_stat_writer.write_dict('main_stats', stats)
+    errors = list(map(lambda y: y[1], filter(lambda x: x[1] is not None, stats.items())))
+    for error in errors:
+        log.error(error)
+        supabase.table('errors').insert(
+            {
+                'deployment_id': irc_connection.nickname,
+                'message': str(error),
+                'severity': 10,
+                'code': error.httpCode
+                }
+            ).execute()
+    stats = {k: (v[0] if v[0] else v[1]) for k, v in stats.items()}
+    error = influx_stat_writer.write_dict('main_stats', stats)
+    if error is not None:
+        supabase.table('errors').insert(
+            {
+                'deployment_id': irc_connection.nickname,
+                'message': str(error),
+                'severity': 10,
+                'code': error.httpCode
+                }
+            ).execute()
     log.debug('stats successfully written to InfluxDB')
     try:
         stats = json.dumps(stats)
@@ -182,19 +238,52 @@ def statloop(influx_stat_writer: InfluxStatWriter, braiins: BraiinsOsClient, irc
     
     log.debug('getting miner temperatures')
     miner_temps = device_map['miners'].get_temps()
-    influx_stat_writer.write_dict('miner_temps', miner_temps)
-    log.debug('successfully wrote miner temperatures to InfluxDB')
+    if miner_temps[1]:
+        supabase.table('errors').insert(
+            {
+                'deployment_id': irc_connection.nickname,
+                'message': str(miner_temps[1]),
+                'severity': 10,
+                'code': 500
+                }
+            ).execute()
+    else:
+        miner_temps = miner_temps[0]
+        influx_stat_writer.write_dict('miner_temps', miner_temps)
+        log.debug('successfully wrote miner temperatures to InfluxDB')
     
-    is_mining = braiins.is_mining()
+    is_mining: dict = braiins.is_mining()
+    for k, v in is_mining.items():
+        # if one of the values in the return dict is an error (not a bool)
+        if not isinstance(v, bool):
+            supabase.table('errors').insert(
+                {
+                    'deployment_id': irc_connection.nickname,
+                    'message': str(v),
+                    'severity': 10,
+                    'code': 500
+                    }
+                ).execute()
     log.debug('polled if ASICs are mining:', is_mining)
     #is_mining = False
     temps = braiins.get_temperature_list()
     if temps[1]:
         temps: MinerAPIError = str(temps[1])
+        supabase.table('errors').insert(
+            {
+                'deployment_id': irc_connection.nickname,
+                'message': str(temps),
+                'severity': 10,
+                'code': 501
+                }
+            ).execute()
     else:
         temps: Dict[str, List[Tuple[str]]] = temps[0]
         for k, v in temps.items():
+            try:
                 temps[k] = {**{'board_'+str(d[2]): {'board': d[0], 'chip': d[1]} for d in v}, 'mining': is_mining.get(k) or 'UNKNOWN'}
+            except Exception as e:
+                print('UNHANDLED ERROR !! (check this out and add to PiErrors!!):', e)
     #temps={}            
     irc_connection.privmsg('#'+irc_connection.nickname, 'miner::'+json.dumps(temps))
 

@@ -5,6 +5,8 @@ import os
 from os.path import join, dirname
 from dotenv import load_dotenv
 
+from messages.types import PiError, ErrorType
+
 # Get the path to the directory this file is in
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(BASEDIR, '../../.base.env'))
@@ -46,9 +48,13 @@ class InfluxStatWriter:
         self.write_api = self.client.write_api(write_options=SYNCHRONOUS)
     
 
-    def write_dict(self, measurement_name: str, datapoints: dict):
+    def write_dict(self, measurement_name: str, datapoints: dict, deployment_id: str = None):
         buffer = []
-        for id in self.deployment_ids:
+        deployments = self.deployment_ids
+        if deployment_id:
+            deployments = list(filter(lambda x: x == deployment_id, self.deployment_ids))
+            
+        for id in deployments:
             for key, value in datapoints.items():
                 point = Point(
                 measurement_name
@@ -65,7 +71,9 @@ class InfluxStatWriter:
             try:
                 self.write_api.write(self.bucket, self.org, data_dict)
                 log.info('wrote stats to InfluxDB')
+                return None
             except Exception as e:
                 log.error('unable to write stats to InfluxDB!', e)
+                return PiError(ErrorType.INFLUX_ERROR, 'unable to write to influx, {}'.format(e), 500)
 
 
