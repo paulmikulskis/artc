@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod, abstractproperty
+from datetime import datetime, timedelta
 import logging
 import os
 from posixpath import abspath, dirname, join
@@ -52,6 +53,15 @@ class Program:
         self.call(function)
         log.debug('instantiating new Program "{}"'.format(self.name))
         self.logger = log
+        self.controller_report_frequency = timedelta(seconds=30)
+        self.controller_report_timer = datetime.now()
+
+
+    def controller_report_time(self):
+        if datetime.now() - self.controller_report_timer > self.controller_report_frequency:
+            self.controller_report_timer = datetime.now()
+            return True
+        return False
 
 
     def call(self, function: ProgramFunctionBase):

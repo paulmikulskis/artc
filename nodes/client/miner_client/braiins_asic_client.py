@@ -431,7 +431,7 @@ class BraiinsOsClient:
         }, None
 
 
-    def get_tempterature_stats(self) -> List[dict[str, int] or None, MinerAPIError or None]:
+    def get_tempterature_stats(self) -> Tuple[dict[str, int] or None, MinerAPIError or None]:
         templist = self.get_temperature_list()
         if templist[1] is not None:
             return [None, templist[1]]
@@ -441,7 +441,7 @@ class BraiinsOsClient:
         keys = list(templist.keys())
         temps = {'c'+str(keys.index(host))+'_board_'+str(d[2]): f(d[0]) for host, data in templist.items() for d in data }
         # temps2 = {'c'+str(keys.index(host))+'_chip_'+str(d[2]): d[1] for host, data in templist.items() for d in data }
-        return [temps, None]
+        return (temps, None)
 
     
     def get_details(self, hosts: List[str] = None) -> List[MinerAPIResponse]:

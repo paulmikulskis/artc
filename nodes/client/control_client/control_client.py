@@ -90,15 +90,14 @@ class ControlBot(SingleServerIRCBot):
         if not isinstance(nodenicks, list):
             log.error('nodenicks passed to ControlBot MUST be a list: {}'.format(nodenicks))
             exit()
-        self.nodenicks = nodenicks
         log.info('ControlBot connecting to {}:{} on {}'.format(server, port, nodenicks.append('main')))
         log.debug('creating new message processor with nodenicks={}'.format(nodenicks))
+        self.nodenicks = nodenicks
 
 
-        default_program = Program(JacuzziTest(target_temp=98))
-
-        # deployment ID initialization dictionary: {'dep0}
-        self.processor = MessageProcessor(self.nodenicks, default_program)
+        # deployment ID initialization dictionary: {'deploymentID': Program}
+        deployment_dict = {nodenick: Program(JacuzziTest(target_temp=98)) for nodenick in self.nodenicks}
+        self.processor = MessageProcessor(deployment_dict)
 
 
     def on_nicknameinuse(self, c, e):
@@ -136,23 +135,28 @@ class ControlBot(SingleServerIRCBot):
 def statloop(influx_stat_writer: InfluxStatWriter, controller: ControlBot):
 
     for deployment_id, program in controller.processor.deployments.items():
-        controller_dict = {
-                'program': json.dumps({
-                    program.active_function.name: 
-                        {**program.active_function.args, 'phase': program.context['phase']}
-                        })
-            }
-        influx_stat_writer.write_dict(
-            'controller',
-            controller_dict,
-            deployment_id=deployment_id
-            )
-        controller.processor.logger.info('sending state to influx: {}'.format(str(controller_dict)[1:-1]))
+        if program and program.controller_report_time():
+            controller_dict = {
+                    deployment_id: json.dumps({
+                        program.active_function.name: 
+                            {**program.active_function.args, 'phase': program.context['phase']}
+                            })
+                }
+            controller.processor.logger.info('sending state to influx: {}'.format(str(controller_dict)[1:-1]))
+            influx_stat_writer.write_dict(
+                    'controller',
+                    controller_dict,
+                    deployment_id=deployment_id
+                )
 
 
 def main():
     import sys
 
+    server = ''
+    nickname = ''
+    channel = ''
+    port = 6667
     if len(sys.argv) != 4:
         print("Usage: testbot <server[:port]> <channel> <nickname> <password>")
         server = os.environ.get("IRC_HOST")
@@ -164,19 +168,19 @@ def main():
             print('!! Error: these variables were not found in base.env either, exiting...')
             sys.exit(1)
 
-
-    s = sys.argv[1].split(":", 1)
-    server = s[0]
-    if len(s) == 2:
-        try:
-            port = int(s[1])
-        except ValueError:
-            print("Error: Erroneous port.")
-            sys.exit(1)
     else:
-        port = 6667
-    channel = sys.argv[2]
-    nickname = sys.argv[3]
+
+        s = sys.argv[1].split(":", 1)
+        server = s[0]
+        if len(s) == 2:
+            try:
+                port = int(s[1])
+            except ValueError:
+                print("Error: Erroneous port.")
+                sys.exit(1)
+
+        channel = sys.argv[2]
+        nickname = sys.argv[3]
 
     nodenicks = os.environ.get("NODENICKS")
     print('NODENICKS')
