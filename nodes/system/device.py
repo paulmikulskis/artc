@@ -39,21 +39,21 @@ class SystemMiners(Device):
         super().__init__(name)
         self.client = BraiinsOsClient(hostnames, port=port, timeout=10, password=password)
 
-    def start_mining(self, hostnames: List[str] or str) -> List[any, PiError]:
+    def start_mining(self, hostnames: List[str] or str) -> Tuple[any, PiError]:
         resp = self.client.start_miner(hostnames)
         error = list(filter(lambda x: x.error is not None, resp)).pop()
         if error:
-            return [None, PiError(ErrorType.MINER_ERROR, error.error.msg, 501)]
+            return (None, PiError(ErrorType.MINER_ERROR, error.error.msg, 501))
         else:
-            return [resp, None]
+            return (resp, None)
     
-    def stop_mining(self, hostnames: List[str] or str):
+    def stop_mining(self, hostnames: List[str] or str) -> Tuple[any, PiError]:
         resp = self.client.stop_miner(hostnames)
         error: MinerAPIResponse = list(filter(lambda x: x.error is not None, resp)).pop()
         if error:
-            return [None, PiError(ErrorType.MINER_ERROR, error.error.msg, 501)]
+            return (None, PiError(ErrorType.MINER_ERROR, error.error.msg, 501))
         else:
-            return [resp, None]
+            return (resp, None)
 
     def process_command(self, command, hostnames):
         if command == 'stop' or command == 'stop_mining' or command == 'false' or command == False or command == 0:
@@ -64,8 +64,8 @@ class SystemMiners(Device):
     def get_temps(self) -> Tuple[any, PiError]:
         resp = self.client.get_tempterature_stats()
         if resp[1] is not None:
-            return [None, PiError(ErrorType.MINER_ERROR, 'error getting ASIC temperatures.  Error: {}'.format(resp[1]), 500)]
-        return [resp[0], None]
+            return (None, PiError(ErrorType.MINER_ERROR, 'error getting ASIC temperatures.  Error: {}'.format(resp[1]), 500))
+        return (resp[0], None)
 
 
 '''
@@ -93,13 +93,13 @@ class AdjustableDigitalDevice(Device):
             elif val == 0 or val == False or val == 'off' or val == 'turn off':  
               self.turn_off()
             print('command executed, pin {} value set to {}'.format(self.pin._pin, val))
-            return [True, None]
+            return (True, None)
         except Exception as e:
-            return [False, PiError(
+            return (False, PiError(
               ErrorType.INTERNAL_ERROR,
               'unable to set relay {} to {}\n{}'.format(self.name, val, e),
               501
-            )]
+            ))
 
     def switch(self):
         self.pin.value = not self.pin.value
@@ -116,9 +116,9 @@ class AdjustableDigitalDevice(Device):
         pin = None
         try:
             pin = self.pin.value
-            return [pin, None]
+            return (pin, None)
         except Exception as e:
-            return [None, PiError(ErrorType.DEVICE_ERROR, 'unable to read pin {} value: {}'.format(self.pin, e))]
+            return (None, PiError(ErrorType.DEVICE_ERROR, 'unable to read pin {} value: {}'.format(self.pin, e)))
 
 
 
@@ -144,18 +144,18 @@ class OneWireThermister(Device):
         temp = None
         try:
             temp = self.sensor.get_temperature(Unit.DEGREES_F)
-            return [temp, None]
+            return (temp, None)
         except Exception as e:
-            return [None, PiError(ErrorType.DEVICE_ERROR, 'unable to read_farenheight on sensor, {}'.format(e))]
+            return (None, PiError(ErrorType.DEVICE_ERROR, 'unable to read_farenheight on sensor, {}'.format(e)))
 
 
     def read_celsius(self):
         temp = None
         try:
             temp = self.sensor.get_temperature()
-            return [temp, None]
+            return (temp, None)
         except Exception as e:
-            return [None, PiError(ErrorType.DEVICE_ERROR, 'unable to read_celcius on sensor, {}'.format(e))]
+            return (None, PiError(ErrorType.DEVICE_ERROR, 'unable to read_celcius on sensor, {}'.format(e)))
 
 
 '''
@@ -211,18 +211,18 @@ class HallEffectFlowSensor:
         error = None
         try:
             GPIO.add_event_detect(self.input_pin, GPIO.BOTH, callback=self.detect, bouncetime=20)
-            return [True, None]
+            return (True, None)
         except Exception as e:
-            return [None, PiError(ErrorType.DEVICE_ERROR, 'unable to call listen() on HallEffectFlowSensor', 501)]
+            return (None, PiError(ErrorType.DEVICE_ERROR, 'unable to call listen() on HallEffectFlowSensor', 501))
 
 
     def stop(self):
         error = None
         try:
             GPIO.remove_event_detect(self.input_pin)
-            return [True, None]
+            return (True, None)
         except Exception as e:
-            return [None, PiError(ErrorType.DEVICE_ERROR, 'unable to stop event_detect on HallEffectFlowSensor', 501)]
+            return (None, PiError(ErrorType.DEVICE_ERROR, 'unable to stop event_detect on HallEffectFlowSensor', 501))
 
     
     def get_rate(self, lookback=timedelta(seconds=10)) -> List[any, PiError]:
@@ -239,10 +239,10 @@ class HallEffectFlowSensor:
         try:
             self.detect()
         except Exception as e:
-            return [None, PiError(ErrorType.DEVICE_ERROR, 'unable to call self.detect() on HallEffectFlowSensor', 501)]
+            return (None, PiError(ErrorType.DEVICE_ERROR, 'unable to call self.detect() on HallEffectFlowSensor', 501))
         
         try:
             selected = self.delta_revs[len(self.delta_revs) - lookback_indices:]
-            return [round((sum(selected) / len(selected)) * self.constant, 4), None]
+            return (round((sum(selected) / len(selected)) * self.constant, 4), None)
         except Exception as e:
-            return [None, PiError(ErrorType.INTERNAL_ERROR, 'error calling lookback history in HallEffectFlowSensor: {}'.format(e), 501)]
+            return (None, PiError(ErrorType.INTERNAL_ERROR, 'error calling lookback history in HallEffectFlowSensor: {}'.format(e), 501))
