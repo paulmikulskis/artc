@@ -115,7 +115,7 @@ class PiBot(SingleServerIRCBot):
         # to the channel of this node's deployment ID
         if e.target == '#'+self.nickname:
             # if the message is intended for this PiBot, then parse:
-            result: List[any or None, PiError or None] = parseMessage(the_message)
+            result: Tuple[any or None, PiError or None] = parseMessage(the_message)
             error = result[1]
             if error is not None:
                 # post error to subapase table for this deploymentid

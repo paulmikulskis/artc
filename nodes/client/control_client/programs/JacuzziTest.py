@@ -92,8 +92,9 @@ class JacuzziTest(ProgramFunctionBase):
         therm_water = stats.get('therm_water')
         miner_max_temp = None
 
+        # expecting: {"antminer": {"board_6": {"board": 45}}}
         try:
-            miner_max_temp = max([f(m.get('board')) or 0 for k, v in miner.items() for l, m in v.items() if 'board' in l])
+            miner_max_temp = max([f(m.get('board')) or 0 for _, v in miner.items() for l, m in v.items() if 'board' in l])
         except:
             msg = 'unable to get miner_max_temp maximum: {}'.format(miner_max_temp)
             log.error(msg)
