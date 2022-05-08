@@ -104,7 +104,7 @@ class PiBot(SingleServerIRCBot):
         # only used more-or-less as a global firehose log of the system
         if e.target == '#main':
             log.info('received a message in the #main channel: {}'.format(e.arguments[0]))
-            return 
+            return True
 
         # !!!!!! ?
         # self.do_command(e, e.arguments[0])
@@ -126,13 +126,15 @@ class PiBot(SingleServerIRCBot):
                         'severity': 10,
                         'code': 500
                         }
-                    ).execute()
+                    )
+                # data.execute()
+                print('NODE ERROR:', error)
 
             else:
                 handleMessageResponse = result[0]
                 return True
 
-        return
+        return True
 
     def on_dccmsg(self, c, e):
         # non-chat DCC messages are raw bytes; decode as text

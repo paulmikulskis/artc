@@ -11,9 +11,9 @@ def executeChangeCommand(device_name, newValue, speed=None) -> Tuple[any, PiErro
           'device {} not found'.format(device_name),
           404
         ))
-    try:
+    try:    
         val = device.set_to(newValue)
-        return [val, None]
+        return (val, None)
     except Exception as e:
         return (None, 
             PiError(
