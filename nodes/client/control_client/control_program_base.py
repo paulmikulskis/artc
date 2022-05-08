@@ -8,7 +8,9 @@ from re import L
 from dotenv import load_dotenv
 from irc.client import ServerConnection, Event
 import sys
-from typing import List
+from typing import List, Tuple
+
+from client.control_client.error import ControlError
 
 # Get the path to the directory this file is in
 BASEDIR = abspath(dirname(__file__))
@@ -166,5 +168,5 @@ class ProgramFunctionBase(ABC):
         self._context = context
 
     @abstractmethod
-    def run(self) -> None:
+    def run(self) -> Tuple[bool or None, ControlError or None]:
         pass

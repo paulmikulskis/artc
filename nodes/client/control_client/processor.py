@@ -72,12 +72,12 @@ class MessageProcessor:
             self.logger.info('intaking command message from {}'.format(event.source_string()))
             return self.intake_command(connection, event)
         else:
-            if len(list(self.deployments.keys)) == 0:
+            if len(list(self.deployments.keys())) == 0:
                 msg = 'skip processing, no deployments configured!'
                 self.logger.info(msg)
                 return [None, ControlError(msg, 500, None)]
             self.logger.info('processing message from {}'.format(event.source_string()))
-            return self.process_node_message(connection, event)
+            return self.process_node_message(connection, target, event)
             
  
 
@@ -141,7 +141,12 @@ class MessageProcessor:
         
         program_name = program.active_function.__class__.__name__
         result = program.run(connection, event)
-        self.logger.info('finished running program "{}", result: {}'.format(program_name, result))
+        msg = ''
+        if result[1] is not None:
+            msg = '{}'.format(result[1])
+        else:
+            msg = '{}'.format(result[0])
+        self.logger.info('finished running program "{}", result: {}'.format(program_name, msg))
         return result
 
 
