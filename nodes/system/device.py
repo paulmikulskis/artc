@@ -225,7 +225,7 @@ class HallEffectFlowSensor:
             return (None, PiError(ErrorType.DEVICE_ERROR, 'unable to stop event_detect on HallEffectFlowSensor', 501))
 
     
-    def get_rate(self, lookback=timedelta(seconds=10)) -> List[any, PiError]:
+    def get_rate(self, lookback=timedelta(seconds=10)) -> Tuple[any, PiError]:
         now = datetime.now()
         lookback_indices = int(lookback.seconds / self.deltaT) or 1
         if lookback_indices > len(self.delta_revs):
