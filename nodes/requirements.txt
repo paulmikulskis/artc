@@ -42,3 +42,11 @@ supabase==0.5.3
 typing_extensions==4.1.1
 urllib3==1.26.9
 websockets==9.1
+adafruit-blinka==7.3.0
+adafruit-io==2.7.0
+RPI.GPIO==0.7.0
+jaraco.collections==3.5.1
+tempora==5.0.1
+jaraco.stream==3.0.3
+jaraco.functools==3.5.0
+more_itertools==8.13.0

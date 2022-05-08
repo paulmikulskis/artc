@@ -18,7 +18,7 @@ from abc import abstractmethod
 import time
 from datetime import datetime, timedelta
 import sys
-from typing import List                      # Import sys module
+from typing import List, Tuple                      # Import sys module
 import RPi.GPIO as GPIO
 import digitalio
 import board
@@ -61,7 +61,7 @@ class SystemMiners(Device):
         if command == 'start' or command == 'start_mining' or command == 'true' or command == True or command == 1:
             return self.start_mining(hostnames)
     
-    def get_temps(self) -> List[any, PiError]:
+    def get_temps(self) -> Tuple[any, PiError]:
         resp = self.client.get_tempterature_stats()
         if resp[1] is not None:
             return [None, PiError(ErrorType.MINER_ERROR, 'error getting ASIC temperatures.  Error: {}'.format(resp[1]), 500)]
@@ -86,7 +86,7 @@ class AdjustableDigitalDevice(Device):
         self.pin.value = starting_state
         
 
-    def set_to(self, val) -> List[any, PiError]:
+    def set_to(self, val) -> Tuple[any, PiError]:
         try:
             if val == 1 or val == True or val == 'on' or val == 'turn on': 
               self.turn_on()
@@ -140,7 +140,7 @@ class OneWireThermister(Device):
             self.error = PiError(ErrorType.DEVICE_ERROR, 'unable to instantiate sensor "{}", {}'.format(self.id, e))
 
 
-    def read_farenheight(self) -> List[any, PiError]:
+    def read_farenheight(self) -> Tuple[any, PiError]:
         temp = None
         try:
             temp = self.sensor.get_temperature(Unit.DEGREES_F)
@@ -207,7 +207,7 @@ class HallEffectFlowSensor:
           self.current_delta_revs += 1
 
     
-    def listen(self) -> List[any, PiError]:
+    def listen(self) -> Tuple[any, PiError]:
         error = None
         try:
             GPIO.add_event_detect(self.input_pin, GPIO.BOTH, callback=self.detect, bouncetime=20)
