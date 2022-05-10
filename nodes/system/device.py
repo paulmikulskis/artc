@@ -27,6 +27,7 @@ from client.miner_client.braiins_asic_client import BraiinsOsClient
 from client.miner_client.braiins_asic_client import MinerAPIResponse
 from w1thermsensor import W1ThermSensor, Sensor, Unit
 
+GPIO.setmode(GPIO.BCM)
 
 class Device:
     def __init__(self, name):
@@ -181,7 +182,7 @@ class HallEffectFlowSensor:
         self.error = None
 
         try:
-            GPIO.setup(input_pin, GPIO.IN)
+            GPIO.setup(input_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         except Exception as e:
             self.error = PiError(ErrorType.DEVICE_ERROR, 'unable to set up HallEffectFlowSensor GPIO pin', 501)
 
@@ -191,6 +192,7 @@ class HallEffectFlowSensor:
         self.constant = 0.1
         self.rate = 0
         self.deltaT = deltaT
+
 
     # channel is required by the RPi.GPIO library, but we make it optional
     # to allow for intentional calls to detect() for RealTime measurements
@@ -210,7 +212,7 @@ class HallEffectFlowSensor:
     def listen(self) -> Tuple[any, PiError]:
         error = None
         try:
-            GPIO.add_event_detect(self.input_pin, GPIO.BOTH, callback=self.detect, bouncetime=20)
+            GPIO.add_event_detect(self.input_pin, GPIO.RISING, callback=self.detect, bouncetime=20)
             return (True, None)
         except Exception as e:
             return (None, PiError(ErrorType.DEVICE_ERROR, 'unable to call listen() on HallEffectFlowSensor', 501))
