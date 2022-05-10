@@ -97,7 +97,7 @@ class ControlBot(SingleServerIRCBot):
 
 
         # deployment ID initialization dictionary: {'deploymentID': Program}
-        deployment_dict = {nodenick: Program(TacoTest(target_temp=69)) for nodenick in self.nodenicks}
+        deployment_dict = {nodenick: Program(TacoTest(target_temp=73)) for nodenick in self.nodenicks}
         self.processor = MessageProcessor(deployment_dict)
 
 
