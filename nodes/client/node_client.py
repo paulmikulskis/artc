@@ -168,7 +168,8 @@ class PiBot(SingleServerIRCBot):
                         'severity': 10,
                         'code': 500
                         }
-                    ).execute()
+                    )
+                # data.execute()
 
             else:
                 handleMessageResponse = result[0]
@@ -231,7 +232,6 @@ def statloop(influx_stat_writer: InfluxStatWriter, braiins: BraiinsOsClient, irc
         #     ).execute()
         log.debug('stats successfully written to InfluxDB')
     try:
-        print('MAIN STATS:', stats)
         stats = json.dumps(stats)
         log.debug('wrote stats: {}'.format(stats))
         irc_connection.privmsg('#'+irc_connection.nickname, 'stats::'+stats)
