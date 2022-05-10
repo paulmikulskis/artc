@@ -159,55 +159,48 @@ class BraiinsOsClient:
 
     def __init__(
         self, 
+        # hosts can be either a full initialization dict, e.g. { '192.168.132.246': (4028, 22), }
+        # or a simple list of IP address strings which will use the default ports e.g. [ '192.168.132.246', ]
         hosts: Union[dict, list] = None,
-        # hosts: List[str] or str = None, 
-        # port: List[int] or int = 4028, 
         timeout: int = 3,
         password: str = '1234count'
       ):
 
         # later implement ARP lookup
-
         dict_hosts: dict = {}
         if hosts == None:
             log.error(' !! no host specified, exiting')
         if isinstance(hosts, list):
-            dict_hosts: dict[str, int] = {host: 22 for host in hosts}
+            dict_hosts: dict[str, Tuple[int, int]] = {host: (4028, 22) for host in hosts}
+        self.connection_dict = dict_hosts
 
-        self.hosts = dict_hosts
-        self.ports = []
+        self.hosts = {}
         self.timeout = timeout
         self.user = 'root'
 
-        # if isinstance(hosts, list):
-        #     self.addresses = hosts
-        # if isinstance(hosts, str):
-        #     self.addresses = [hosts]
-        
-        # if isinstance(port, list):
-        #     self.ports = port
-        # if isinstance(hosts, str):
-        #     self.ports = [port]
-
-        for host, port in self.hosts.items():
+        # host, port_tuple is sourced from the connection dictionary:
+        #    {'192.168.132.246': (4028, 22)}             ..aka
+        #    {'[host_ip]': (BosMiner_Port, SSH_Port)}
+        for host, port_tuple in self.connection_dict.items():
             try:
                 info = socket.gethostbyaddr(host)
                 new_host_info = {
                     'url': host,
                     'hostname': info[0],
                     'ip': info[2][0],
-                    'port': int(port),
-                    'connect_string': '{}:{}'.format(info[2][0], port),
+                    'port': int(port_tuple[0]),
+                    'ssh_port': int(port_tuple[1]),
+                    'connect_string': '{}:{}'.format(info[2][0], port_tuple[0]),
                     'password': password
                 }
                 self.hosts[info[0]] = new_host_info
                 try:
                     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    sock.connect((host, port))
+                    sock.connect((host, port_tuple[0]))
                     sock.close()
                     print('client can connect to bosminer API at:\n  {}'.format(new_host_info))
                 except Exception as e:
-                    print(' currently unable to connect to bosminer API at "{}"'.format(host))
+                    print(' currently unable to connect to bosminer API at "{}:{}"'.format(host, port_tuple[0]))
                     print(e)
             except Exception as e:
                 print(' host "{}" is unreachable!'.format(host))
