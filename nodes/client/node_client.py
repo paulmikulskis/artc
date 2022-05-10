@@ -218,7 +218,7 @@ def statloop(influx_stat_writer: InfluxStatWriter, braiins: BraiinsOsClient, irc
         #         'code': error.httpCode
         #         }
         #     ).execute()
-    stats = {k: (v[0] if v[0] else v[1]) for k, v in stats.items()}
+    stats = {k: (v[0] if v[0] is not None else v[1]) for k, v in stats.items()}
     error = influx_stat_writer.write_dict('main_stats', stats)
     if error is not None:
         # supabase.table('errors').insert(
