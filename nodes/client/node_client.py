@@ -237,9 +237,9 @@ def statloop(influx_stat_writer: InfluxStatWriter, braiins: BraiinsOsClient, irc
     except:
         log.error('unable to jsonify stats received by stat_map functiong, skipping IRC communications!')
     
-    log.debug('getting miner temperatures')
-    miner_temps = device_map['miners'].get_temps()
-    if miner_temps[1]:
+    # log.debug('getting miner temperatures')
+    # miner_temps = device_map['miners'].get_temps()
+    # if miner_temps[1]:
         # supabase.table('errors').insert(
         #     {
         #         'deployment_id': irc_connection.nickname,
@@ -248,16 +248,16 @@ def statloop(influx_stat_writer: InfluxStatWriter, braiins: BraiinsOsClient, irc
         #         'code': 500
         #         }
         #     ).execute()
-        log.error('miner temp error:', error)
-    else:
-        miner_temps = miner_temps[0]
-        influx_stat_writer.write_dict('miner_temps', miner_temps)
-        log.debug('successfully wrote miner temperatures to InfluxDB')
+        # log.error('miner temp error:', error)
+    # else:
+        # miner_temps = miner_temps[0]
+        # influx_stat_writer.write_dict('miner_temps', miner_temps)
+        # log.debug('successfully wrote miner temperatures to InfluxDB')
     
-    is_mining: dict = braiins.is_mining()
-    for k, v in is_mining.items():
-        # if one of the values in the return dict is an error (not a bool)
-        if not isinstance(v, bool):
+    # is_mining: dict = braiins.is_mining()
+    # for k, v in is_mining.items():
+    #     if one of the values in the return dict is an error (not a bool)
+    #     if not isinstance(v, bool):
             # supabase.table('errors').insert(
             #     {
             #         'deployment_id': irc_connection.nickname,
@@ -266,12 +266,12 @@ def statloop(influx_stat_writer: InfluxStatWriter, braiins: BraiinsOsClient, irc
             #         'code': 500
             #         }
             #     ).execute()
-            pass
-    log.debug('polled if ASICs are mining:', is_mining)
+            # pass
+    # log.debug('polled if ASICs are mining:', is_mining)
     #is_mining = False
-    temps = braiins.get_temperature_list()
-    if temps[1]:
-        temps: MinerAPIError = str(temps[1])
+    # temps = braiins.get_temperature_list()
+    # if temps[1]:
+    #     temps: MinerAPIError = str(temps[1])
         # supabase.table('errors').insert(
         #     {
         #         'deployment_id': irc_connection.nickname,
@@ -280,15 +280,15 @@ def statloop(influx_stat_writer: InfluxStatWriter, braiins: BraiinsOsClient, irc
         #         'code': 501
         #         }
         #     ).execute()
-    else:
-        temps: Dict[str, List[Tuple[str]]] = temps[0]
-        for k, v in temps.items():
-            try:
-                temps[k] = {**{'board_'+str(d[2]): {'board': d[0], 'chip': d[1]} for d in v}, 'mining': is_mining.get(k) or 'UNKNOWN'}
-            except Exception as e:
-                print('UNHANDLED ERROR !! (check this out and add to PiErrors!!):', e)
+    # else:
+    #     temps: Dict[str, List[Tuple[str]]] = temps[0]
+    #     for k, v in temps.items():
+    #         try:
+    #             temps[k] = {**{'board_'+str(d[2]): {'board': d[0], 'chip': d[1]} for d in v}, 'mining': is_mining.get(k) or 'UNKNOWN'}
+    #         except Exception as e:
+    #             print('UNHANDLED ERROR !! (check this out and add to PiErrors!!):', e)
     #temps={}            
-    irc_connection.privmsg('#'+irc_connection.nickname, 'miner::'+json.dumps(temps))
+    # irc_connection.privmsg('#'+irc_connection.nickname, 'miner::'+json.dumps(temps))
 
 
 def main():
