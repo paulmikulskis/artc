@@ -11,7 +11,7 @@ FIELD_SEPRATATOR = '::'
 
 class TacoTest(ProgramFunctionBase):
 
-    def __init__(self, target_temp=104):
+    def __init__(self, target_temp=69):
         try:
             self.target_temp = float(target_temp)
         except:

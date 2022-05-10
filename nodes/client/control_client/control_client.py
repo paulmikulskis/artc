@@ -46,6 +46,7 @@ from client.control_client.control_program_base import Program
 from client.control_client.processor import MessageProcessor
 from client.control_client.programs.HandOnOffTest import HandOnOffTest
 from client.control_client.programs.JacuzziTest import JacuzziTest
+from client.control_client.programs.TacoTest import TacoTest
 from run.influx_wrapper import InfluxStatWriter
 
 
@@ -96,7 +97,7 @@ class ControlBot(SingleServerIRCBot):
 
 
         # deployment ID initialization dictionary: {'deploymentID': Program}
-        deployment_dict = {nodenick: Program(JacuzziTest(target_temp=98)) for nodenick in self.nodenicks}
+        deployment_dict = {nodenick: Program(TacoTest(target_temp=69)) for nodenick in self.nodenicks}
         self.processor = MessageProcessor(deployment_dict)
 
 

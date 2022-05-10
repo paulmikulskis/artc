@@ -12,10 +12,13 @@ from client.control_client.control_program_base import Program
 # import and list all programs here:
 from client.control_client.programs.HandOnOffTest import HandOnOffTest
 from client.control_client.programs.JacuzziTest import JacuzziTest
+from client.control_client.programs.TacoTest import TacoTest
+
 
 ALL_PROGRAMS = [
     HandOnOffTest,
-    JacuzziTest
+    JacuzziTest,
+    TacoTest
 ]
 
 class ControlError:
