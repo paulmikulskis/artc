@@ -210,26 +210,26 @@ def statloop(influx_stat_writer: InfluxStatWriter, braiins: BraiinsOsClient, irc
     errors = list(map(lambda y: y[1], filter(lambda x: x[1] is not None, stats.items())))
     for error in errors:
         log.error(error)
-        supabase.table('errors').insert(
-            {
-                'deployment_id': irc_connection.nickname,
-                'message': str(error),
-                'severity': 10,
-                'code': error.httpCode
-                }
-            ).execute()
+        # supabase.table('errors').insert(
+        #     {
+        #         'deployment_id': irc_connection.nickname,
+        #         'message': str(error),
+        #         'severity': 10,
+        #         'code': error.httpCode
+        #         }
+        #     ).execute()
     stats = {k: (v[0] if v[0] else v[1]) for k, v in stats.items()}
     error = influx_stat_writer.write_dict('main_stats', stats)
     if error is not None:
-        supabase.table('errors').insert(
-            {
-                'deployment_id': irc_connection.nickname,
-                'message': str(error),
-                'severity': 10,
-                'code': error.httpCode
-                }
-            ).execute()
-    log.debug('stats successfully written to InfluxDB')
+        # supabase.table('errors').insert(
+        #     {
+        #         'deployment_id': irc_connection.nickname,
+        #         'message': str(error),
+        #         'severity': 10,
+        #         'code': error.httpCode
+        #         }
+        #     ).execute()
+        log.debug('stats successfully written to InfluxDB')
     try:
         stats = json.dumps(stats)
         log.debug('wrote stats: {}'.format(stats))
@@ -240,14 +240,15 @@ def statloop(influx_stat_writer: InfluxStatWriter, braiins: BraiinsOsClient, irc
     log.debug('getting miner temperatures')
     miner_temps = device_map['miners'].get_temps()
     if miner_temps[1]:
-        supabase.table('errors').insert(
-            {
-                'deployment_id': irc_connection.nickname,
-                'message': str(miner_temps[1]),
-                'severity': 10,
-                'code': 500
-                }
-            ).execute()
+        # supabase.table('errors').insert(
+        #     {
+        #         'deployment_id': irc_connection.nickname,
+        #         'message': str(miner_temps[1]),
+        #         'severity': 10,
+        #         'code': 500
+        #         }
+        #     ).execute()
+        log.error('miner temp error:', error)
     else:
         miner_temps = miner_temps[0]
         influx_stat_writer.write_dict('miner_temps', miner_temps)
@@ -257,27 +258,28 @@ def statloop(influx_stat_writer: InfluxStatWriter, braiins: BraiinsOsClient, irc
     for k, v in is_mining.items():
         # if one of the values in the return dict is an error (not a bool)
         if not isinstance(v, bool):
-            supabase.table('errors').insert(
-                {
-                    'deployment_id': irc_connection.nickname,
-                    'message': str(v),
-                    'severity': 10,
-                    'code': 500
-                    }
-                ).execute()
+            # supabase.table('errors').insert(
+            #     {
+            #         'deployment_id': irc_connection.nickname,
+            #         'message': str(v),
+            #         'severity': 10,
+            #         'code': 500
+            #         }
+            #     ).execute()
+            pass
     log.debug('polled if ASICs are mining:', is_mining)
     #is_mining = False
     temps = braiins.get_temperature_list()
     if temps[1]:
         temps: MinerAPIError = str(temps[1])
-        supabase.table('errors').insert(
-            {
-                'deployment_id': irc_connection.nickname,
-                'message': str(temps),
-                'severity': 10,
-                'code': 501
-                }
-            ).execute()
+        # supabase.table('errors').insert(
+        #     {
+        #         'deployment_id': irc_connection.nickname,
+        #         'message': str(temps),
+        #         'severity': 10,
+        #         'code': 501
+        #         }
+        #     ).execute()
     else:
         temps: Dict[str, List[Tuple[str]]] = temps[0]
         for k, v in temps.items():
