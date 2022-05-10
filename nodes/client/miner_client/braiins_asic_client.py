@@ -184,6 +184,7 @@ class BraiinsOsClient:
         for host, port_tuple in self.connection_dict.items():
             try:
                 info = socket.gethostbyaddr(host)
+                print('!!!!got host info', info)
                 new_host_info = {
                     'url': host,
                     'hostname': info[0],
