@@ -11,7 +11,7 @@ import pprint
 import socket
 from sys import stderr
 import time
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 from unittest import result
 from dotenv import load_dotenv
 import paramiko
@@ -159,44 +159,51 @@ class BraiinsOsClient:
 
     def __init__(
         self, 
-        hosts: List[str] or str = None, 
-        port: List[int] or int = 4028, 
+        hosts: Union[dict, list] = None,
+        # hosts: List[str] or str = None, 
+        # port: List[int] or int = 4028, 
         timeout: int = 3,
         password: str = '1234count'
       ):
-        self.timeout = timeout
-        self.hosts = {}
-        self.user = 'root'
+
         # later implement ARP lookup
+
+        dict_hosts: dict = {}
         if hosts == None:
             log.error(' !! no host specified, exiting')
-
-
         if isinstance(hosts, list):
-            self.addresses = hosts
-        if isinstance(hosts, str):
-            self.addresses = [hosts]
-        
-        if isinstance(port, list):
-            self.ports = port
-        if isinstance(hosts, str):
-            self.ports = [port]
+            dict_hosts: dict[str, int] = {host: 22 for host in hosts}
 
-        for i, host in enumerate(self.addresses):
+        self.hosts = dict_hosts
+        self.ports = []
+        self.timeout = timeout
+        self.user = 'root'
+
+        # if isinstance(hosts, list):
+        #     self.addresses = hosts
+        # if isinstance(hosts, str):
+        #     self.addresses = [hosts]
+        
+        # if isinstance(port, list):
+        #     self.ports = port
+        # if isinstance(hosts, str):
+        #     self.ports = [port]
+
+        for host, port in self.hosts.items():
             try:
                 info = socket.gethostbyaddr(host)
                 new_host_info = {
                     'url': host,
                     'hostname': info[0],
                     'ip': info[2][0],
-                    'port': int(self.ports[i]),
-                    'connect_string': '{}:{}'.format(info[2][0], self.ports[i]),
+                    'port': int(port),
+                    'connect_string': '{}:{}'.format(info[2][0], port),
                     'password': password
                 }
                 self.hosts[info[0]] = new_host_info
                 try:
                     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    sock.connect((host, self.ports[i]))
+                    sock.connect((host, port))
                     sock.close()
                     print('client can connect to bosminer API at:\n  {}'.format(new_host_info))
                 except Exception as e:
