@@ -29,7 +29,7 @@ class TacoTestSettings:
     # that extends device.Device
     device_map: Dict[str, Device] = {
         'therm_oil': OneWireThermister('therm_oil', 6, THERMISTOR_ADDRESSES),
-        'relay': RelaySwitch('relay', False, DigitalInOut(board.D17)),
+        'relay': RelaySwitch('relay', True, DigitalInOut(board.D17)),
     }
 
     # list out all the stats to be collected and shipped
