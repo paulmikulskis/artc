@@ -50,3 +50,4 @@ tempora==5.0.1
 jaraco.stream==3.0.3
 jaraco.functools==3.5.0
 more_itertools==8.13.0
+influxdb_client==1.28.0

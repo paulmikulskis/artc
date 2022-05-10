@@ -20,15 +20,16 @@ class TacoTestSettings:
         2: '3c57f64872a8',
         3: '3c95f648bddd',
         4: '3c4bf6486f79',
-        5: '3c5bf6482baa'
+        5: '3c5bf6482baa',
+        6: '3c01f09681ea'
     }
 
     # list out the devices used in the project
     # each device should have a name, and be mapped to an object
     # that extends device.Device
     device_map: Dict[str, Device] = {
-        'therm_oil': OneWireThermister('therm_oil', 4, THERMISTOR_ADDRESSES),
-        'relay': RelaySwitch('relay', False, DigitalInOut(board.D10)),
+        'therm_oil': OneWireThermister('therm_oil', 6, THERMISTOR_ADDRESSES),
+        'relay': RelaySwitch('relay', False, DigitalInOut(board.D17)),
     }
 
     # list out all the stats to be collected and shipped
